@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tesla Universe – Electric Cars, Energy & Shop</title>
+  <link rel="icon" href="https://upload.wikimedia.org/wikipedia/commons/e/e8/Tesla_logo.png" type="image/png">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Raleway:wght@300;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --tesla-red: #e82127;
+      --dark-bg: #0a0a0a;
+      --light-bg: #1c1c1c;
+    }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Raleway', sans-serif;
+      background: #000;
+      color: #fff;
+      overflow-x: hidden;
+    }
+    header {
+      background: #111;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px 30px;
+      position: sticky;
+      top: 0;
+      z-index: 999;
+      box-shadow: 0 4px 10px #e82127;
+    }
+    header img {
+      height: 40px;
+    }
+    nav a {
+      color: #fff;
+      margin: 0 15px;
+      text-decoration: none;
+      font-weight: 600;
+      transition: color 0.3s;
+    }
+    nav a:hover {
+      color: var(--tesla-red);
+    }
+    .neon-text {
+      font-family: 'Orbitron', sans-serif;
+      text-align: center;
+      text-transform: uppercase;
+      animation: disco 5s infinite;
+    }
+    @keyframes disco {
+      0% { color: #e82127; text-shadow: 0 0 10px #e82127; }
+      25% { color: #00ffff; text-shadow: 0 0 10px #00ffff; }
+      50% { color: #ffcc00; text-shadow: 0 0 10px #ffcc00; }
+      75% { color: #00ff55; text-shadow: 0 0 10px #00ff55; }
+      100% { color: #e82127; text-shadow: 0 0 10px #e82127; }
+    }
+    .hero-section {
+      position: relative;
+      background: url('https://upload.wikimedia.org/wikipedia/commons/e/e8/Tesla_logo.png') center center/contain no-repeat, #000;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      overflow: hidden;
+    }
+    .hero-overlay {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.5);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+    .hero-overlay p {
+      font-size: 1.2rem;
+      max-width: 600px;
+      margin: 20px auto;
+      font-style: italic;
+    }
+    .cta-btn {
+      background-color: var(--tesla-red);
+      color: white;
+      padding: 12px 25px;
+      border: none;
+      border-radius: 5px;
+      text-decoration: none;
+      font-weight: 700;
+      transition: background-color 0.3s;
+      box-shadow: 0 0 10px var(--tesla-red);
+      display: inline-block;
+      margin-top: 15px;
+    }
+    .cta-btn:hover {
+      background-color: #b4161b;
+    }
+    .section {
+      padding: 60px 20px;
+      text-align: center;
+      background: #111;
+    }
+    .section h2 {
+      margin-bottom: 40px;
+    }
+    .models-grid {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 30px;
+    }
+    .model-card {
+      background: #000;
+      border-radius: 16px;
+      box-shadow: 0 0 25px #e82127;
+      max-width: 380px;
+      overflow: hidden;
+      transition: transform 0.4s ease;
+    }
+    .model-card:hover {
+      transform: scale(1.05);
+    }
+    .model-card img {
+      width: 100%;
+      height: 260px;
+      object-fit: cover;
+    }
+    .model-info {
+      padding: 20px;
+      text-align: center;
+    }
+    .model-info h3 {
+      margin-bottom: 10px;
+    }
+    .model-info p {
+      margin-bottom: 10px;
+      font-size: 1rem;
+    }
+    form {
+      max-width: 400px;
+      margin: 20px auto;
+      text-align: left;
+    }
+    form label {
+      display: block;
+      margin: 10px 0 5px;
+    }
+    form input, form textarea {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 10px;
+      border-radius: 5px;
+      border: none;
+    }
+    iframe {
+      width: 100%;
+      max-width: 600px;
+      height: 300px;
+      border: none;
+      margin-top: 30px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px #e82127;
+    }
+    footer {
+      background: #000;
+      color: #888;
+      padding: 30px 20px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <img src="https://upload.wikimedia.org/wikipedia/commons/e/e8/Tesla_logo.png" alt="Tesla Logo">
+    <nav>
+      <a href="#hero">Home</a>
+      <a href="#models">Vehicles</a>
+      <a href="#garage">Showroom</a>
+      <a href="#contact">Contact</a>
+    </nav>
+  </header>
+
+  <section id="hero" class="hero-section">
+    <div class="hero-overlay">
+      <h1 class="neon-text">Welcome to the Tesla Universe</h1>
+      <p>Electric Cars. Solar & Clean Energy. Advanced Technology.</p>
+      <a href="#models" class="cta-btn">Explore Models</a>
+    </div>
+  </section>
+
+  <section id="models" class="section">
+    <h2 class="neon-text">Tesla Vehicles</h2>
+    <div class="models-grid">
+      <div class="model-card">
+        <img src="resources/image1.jpg" alt="Model S">
+        <div class="model-info">
+          <h3 class="neon-text">Model S</h3>
+          <p>Price: $74,990</p>
+          <p>Features: Long Range, Autopilot, Premium Interior</p>
+          <a href="#contact" class="cta-btn">Order Now</a>
+        </div>
+      </div>
+      <div class="model-card">
+        <img src="resources/image2.jpg" alt="Model 3">
+        <div class="model-info">
+          <h3 class="neon-text">Model 3</h3>
+          <p>Price: $32,990</p>
+          <p>Features: Affordable Luxury, Fast Charging, Autopilot</p>
+          <a href="#contact" class="cta-btn">Order Now</a>
+        </div>
+      </div>
+      <div class="model-card">
+        <img src="resources/image3.jpg" alt="Model X">
+        <div class="model-info">
+          <h3 class="neon-text">Model X</h3>
+          <p>Price: $89,990</p>
+          <p>Features: Falcon Wing Doors, AWD, Premium Sound</p>
+          <a href="#contact" class="cta-btn">Order Now</a>
+        </div>
+      </div>
+      <div class="model-card">
+        <img src="resources/image4.jpg" alt="Model Y">
+        <div class="model-info">
+          <h3 class="neon-text">Model Y</h3>
+          <p>Price: $39,990</p>
+          <p>Features: Versatile, Spacious, High Safety</p>
+          <a href="#contact" class="cta-btn">Order Now</a>
+        </div>
+      </div>
+      <div class="model-card">
+        <img src="resources/image5.jpg" alt="Cybertruck">
+        <div class="model-info">
+          <h3 class="neon-text">Cybertruck</h3>
+          <p>Price: $49,990</p>
+          <p>Features: Ultra-Hard Exoskeleton, 500+ Mile Range</p>
+          <a href="#contact" class="cta-btn">Order Now</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="garage" class="section">
+    <h2 class="neon-text">Tesla Showroom</h2>
+    <p>Welcome to our virtual showroom. Browse our premium Tesla energy solutions and sign up to get the latest news and offers!</p>
+    <form>
+      <label for="name">Name:</label>
+      <input type="text" id="name" name="name" required>
+      <label for="email">Email:</label>
+      <input type="email" id="email" name="email" required>
+      <button type="submit" class="cta-btn">Subscribe</button>
+    </form>
+    <div class="models-grid">
+      <div class="model-card">
+        <img src="resources/showroom1.jpg" alt="Powerwall">
+        <div class="model-info">
+          <h3 class="neon-text">Tesla Powerwall</h3>
+          <p>Price: $11,500</p>
+          <p>Features: Home Battery Backup, Energy Independence, Solar Integration</p>
+          <a href="#contact" class="cta-btn">Enquire Now</a>
+        </div>
+      </div>
+      <div class="model-card">
+        <img src="resources/showroom2.jpg" alt="Showroom Photo">
+        <div class="model-info">
+          <h3 class="neon-text">Tesla Solar Roof</h3>
+          <p>Price: Custom Quote</p>
+          <p>Features: Integrated Solar Glass, Energy Savings, Sleek Design</p>
+          <a href="#contact" class="cta-btn">Enquire Now</a>
+        </div>
+      </div>
+    </div>
+    <iframe src="https://maps.google.com/maps?q=Tesla%20HQ&t=&z=13&ie=UTF8&iwloc=&output=embed"></iframe>
+  </section>
+
+  <section id="contact" class="section">
+    <h2 class="neon-text">Contact Us</h2>
+    <p>Schedule a test drive or ask us anything!</p>
+    <form action="mailto:poomeigh503@gmail.com" method="POST" enctype="text/plain">
+      <label>Name:</label>
+      <input type="text" name="name" required>
+      <label>Email:</label>
+      <input type="email" name="email" required>
+      <label>Message:</label>
+      <textarea name="message" rows="4" required></textarea>
+      <button type="submit" class="cta-btn">Send Message</button>
+    </form>
+    <p>WhatsApp: 082 356 2239 | Facebook: <a href="https://www.facebook.com/phumeh.wushwekazy.Mjoli" target="_blank">Phumeh Wushwekazy Mjoli</a></p>
+  </section>
+
+  <footer>
+    <p>&copy; 2025 Tesla Inc. All rights reserved.</p>
+  </footer>
+
+  <script>
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', e => {
+        e.preventDefault();
+        const targetID = anchor.getAttribute('href').substring(1);
+        const targetElement = document.getElementById(targetID);
+        if(targetElement) {
+          targetElement.scrollIntoView({ behavior: 'smooth' });
+        }
+      });
+    });
+  </script>
+</body>
+</html>
