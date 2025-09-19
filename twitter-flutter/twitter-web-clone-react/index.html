@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Twitter (X) Features Master Reference</title>
+    <link rel="icon" type="image/x-icon" href="https://abs.twimg.com/favicons/twitter.ico">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+        
+        body {
+            background-color: #f7f9fa;
+            color: #0f1419;
+            line-height: 1.6;
+            padding-bottom: 40px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        header {
+            background-color: #000;
+            color: white;
+            padding: 20px 0;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .header-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .logo {
+            height: 40px;
+            width: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 24px;
+            color: white;
+        }
+        
+        h1 {
+            font-size: 28px;
+            font-weight: 900;
+        }
+        
+        .intro {
+            background-color: white;
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+        }
+        
+        .intro p {
+            margin-bottom: 15px;
+            font-size: 16px;
+            color: #536471;
+        }
+        
+        .toc {
+            background-color: white;
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+        }
+        
+        .toc h2 {
+            margin-bottom: 20px;
+            font-size: 22px;
+            color: #0f1419;
+            border-bottom: 2px solid #eff3f4;
+            padding-bottom: 10px;
+        }
+        
+        .toc-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+        }
+        
+        .toc-item {
+            padding: 12px 15px;
+            background-color: #f7f9fa;
+            border-radius: 12px;
+            transition: all 0.2s ease;
+        }
+        
+        .toc-item:hover {
+            background-color: #eff3f4;
+            transform: translateY(-2px);
+        }
+        
+        .toc-item a {
+            text-decoration: none;
+            color: #0f1419;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .toc-item a::before {
+            content: "#";
+            color: #1d9bf0;
+            font-weight: bold;
+        }
+        
+        .category {
+            background-color: white;
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+        }
+        
+        .category h2 {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+            font-size: 22px;
+            color: #0f1419;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #eff3f4;
+        }
+        
+        .category h2::before {
+            content: "";
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            background-color: #1d9bf0;
+            border-radius: 6px;
+        }
+        
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        
+        .feature-card {
+            background-color: #f7f9fa;
+            border-radius: 12px;
+            padding: 20px;
+            transition: all 0.2s ease;
+            border: 1px solid #eff3f4;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+        }
+        
+        .feature-card h3 {
+            font-size: 18px;
+            margin-bottom: 12px;
+            color: #0f1419;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .feature-card h3::before {
+            content: "•";
+            color: #1d9bf0;
+            font-size: 24px;
+        }
+        
+        .feature-card p {
+            color: #536471;
+            font-size: 15px;
+            line-height: 1.5;
+        }
+        
+        .availability {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+            margin-top: 12px;
+            background-color: #eff3f4;
+        }
+        
+        .available-all {
+            color: #00ba7c;
+        }
+        
+        .available-premium {
+            color: #8c50f7;
+        }
+        
+        .available-limited {
+            color: #f91880;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            color: #536471;
+            font-size: 14px;
+        }
+        
+        @media (max-width: 768px) {
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .toc-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header-content {
+                flex-direction: column;
+                text-align: center;
+                gap: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo-container">
+                    <div class="logo">𝕏</div>
+                    <h1>Twitter (X) Features Master Reference</h1>
+                </div>
+            </div>
+        </div>
+    </header>
+    
+    <div class="container">
+        <section class="intro">
+            <p>Here's a detailed list of <strong>all major Twitter (X) features</strong>, organized by category, including some of the newer and lesser-known functionalities.</p>
+            <p>This comprehensive reference includes every menu option, premium feature, and hidden feature, so you have one complete reference sheet.</p>
+        </section>
+        
+        <section class="toc">
+            <h2>Table of Contents</h2>
+            <div class="toc-grid">
+                <div class="toc-item"><a href="#account-profile">Account & Profile Features</a></div>
+                <div class="toc-item"><a href="#tweet-features">Tweet Features</a></div>
+                <div class="toc-item"><a href="#media-features">Media Features</a></div>
+                <div class="toc-item"><a href="#interaction-features">Interaction Features</a></div>
+                <div class="toc-item"><a href="#discovery-feed">Discovery & Content Feed</a></div>
+                <div class="toc-item"><a href="#account-social">Account & Social Features</a></div>
+                <div class="toc-item"><a href="#analytics-monetization">Analytics & Monetization</a></div>
+                <div class="toc-item"><a href="#safety-moderation">Safety & Moderation</a></div>
+                <div class="toc-item"><a href="#advanced-experimental">Advanced / Experimental Features</a></div>
+            </div>
+        </section>
+        
+        <section id="account-profile" class="category">
+            <h2>Account & Profile Features</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <h3>Profile Customization</h3>
+                    <p>Profile picture, header image, bio, website link, location, date of birth.</p>
+                    <span class="availability available-all">All Users</span>
+                </div>
+                <div class="feature-card">
+                    <h3>Verified Badge</h3>
+                    <p>Blue check for notable accounts (optional for some users via subscription).</p>
+                    <span class="availability available-premium">Premium</span>
+                </div>
+                <div class="feature-card">
+                    <h3>Display Name & Handle</h3>
+                    <p>Separate from username; can be changed anytime.</p>
+                    <span class="availability available-all">All Users</span>
+                </div>
+                <div class="feature-card">
+                    <h3>Pinned Tweet</h3>
+                    <p>Pin one tweet to the top of your profile.</p>
+                    <span class="availability available-all">All Users</span>
+                </div>
+                <div class="feature-card">
+                    <h3>Profile Theme</h3>
+                    <p>Dark/light mode, color accents, font size.</p>
+                    <span class="availability available-all">All Users</span>
+                </div>
+                <div class="feature-card">
+                    <h3>Professional Account</h3>
+                    <p>Adds business-related tools and analytics.</p>
+                    <span class="availability available-all">All Users</span>
+                </div>
+            </div>
+        </section>
+        
+        <section id="tweet-features" class="category">
+            <h2>Tweet Features</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <h3>Text Tweets</h3>
+                    <p>Basic tweets with character limit (now up to 280).</p>
+                    <span class="availability available-all">All Users</span>
+                </div>
+                <div class="feature-card">
+                    <h3>Media Tweets</h3>
+                    <p>Images, GIFs, videos, polls.</p>
+                    <span class="availability available-all">All Users</span>
+                </div>
+                <div class="feature-card">
+                    <h3>Threads</h3>
+                    <p>Connect multiple tweets together in a sequence.</p>
+                    <span class="availability available-all">All Users</span>
+                </div>
+                <div class="feature-card">
+                    <h3>Mentions</h3>
+                    <p>Tag users with @username.</p>
+                    <span class="availability available-all">All Users</span>
+                </div>
+                <div class="feature-card">
+                    <h3>Hashtags</h3>
+                    <p>#Topic tags for discovery.</p>
+                    <span class="availability available-all">All Users</span>
+                </div>
+                <div class="feature-card">
+                    <h3>Reply/Quote Tweet</h3>
+                    <p>Reply to tweets or quote them with commentary.</p>
+                    <span class="availability available-all">All Users</span>
+                </div>
+                <div class="feature-card">
+                    <h3>Scheduled Tweets</h3>
+                    <p>Schedule a tweet to post later.</p>
+                    <span class="availability available-all">All Users</span>
+                </div>
+                <div class="feature-card">
+                    <h3>Super Follow / Subscription Tweets</h3>
+                    <p>Exclusive tweets for paid followers.</p>
+                    <span class="availability available-limited">Limited</span>
+                </div>
+                <div class="feature-card">
+                    <h3>Tweet Editing</h3>
+                    <p>Edit a tweet within a limited time (for X Premium).</p>
+                    <span class="availability available-premium">Premium</span>
+                </div>
+            </div>
+        </section>
+        
+        <section id="media-features" class="category">
+            <h2>Media Features</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <h3>Image Upload</h3>
+                    <p>JPEG, PNG, GIF (animated limited to 15 MB on mobile).</p>
+                    <span class="availability available-all">All Users</span>
+                </div>
+                <div class="feature-card">
+                    <h3>Video Upload</h3>
+                    <p>MP4, max length ~2 minutes 20 seconds (longer for premium).</p>
+                    <span class="availability available-all">All Users</span>
+                </div>
+                <div class="feature-card">
+                    <h3>GIF Library</h3>
+                    <p>Integrated Giphy search.</p>
+                    <span class="availability available-all">All Users</span>
+                </div>
+                <div class="feature-card">
+                    <h3>Media Carousels</h3>
+                    <p>Upload multiple images (up to 4).</p>
+                    <span class="availability available-all">All Users</span>
+                </div>
+                <div class="feature-card">
+                    <h3>Alt Text</h3>
+                    <p>Add descriptions for accessibility.</p>
+                    <span class="availability available-all">All Users</span>
+                </div>
+                <div class="feature-card">
+                    <h3>Audio Tweets</h3>
+                    <p>Record and share voice messages.</p>
+                    <span class="availability available-all">All Users</span>
+                </div>
+            </div>
+        </section>
+        
+        <section id="interaction-features" class="category">
+            <h2>Interaction Features</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <h3>Likes</h3>
+                    <p>Heart icon.</p>
+                    <span class="availability available-all">All Users</span>
+                </div>
+                <div class="feature-card">
+                    <h3>Retweets & Quote Tweets</h3>
+                    <p>Share content.</p>
+                    <span class="availability available-all">All Users</span>
+                </div>
+                <div class="feature-card">
+                    <h3>Replies</h3>
+                    <p>Comment on tweets.</p>
+                    <span class="availability available-all">All Users</span>
+                </div>
+                <div class="feature-card">
+                    <h3>Mentions Notifications</h3>
+                    <p>Get notified when someone tags you.</p>
+                    <span class="availability available-all">All Users</span>
+                </div>
+                <div class="feature-card">
+                    <h3>Direct Messages (DMs)</h3>
+                    <p>Private conversations with one or multiple users.</p>
+                    <span class="availability available-all">All Users</span>
+                </div>
+                <div class="feature-card">
+                    <h3>Reactions on DMs</h3>
+                    <p>Emojis on messages.</p>
+                    <span class="availability available-all">All Users</span>
+                </div>
+                <div class="feature-card">
+                    <h3>Spaces</h3>
+                    <p>Live audio conversations/rooms.</p>
+                    <span class="availability available-all">All Users</span>
+                </div>
+            </div>
+        </section>
+        
+        <section id="discovery-feed" class="category">
+            <h2>Discovery & Content Feed</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <h3>Home Timeline</h3>
+                    <p>Tweets from followed accounts and recommendations.</p>
+                    <span class="availability available-all">All Users</span>
+                </div>
+                <div class="feature-card">
+                    <h3>For You</h3>
+                    <p>Algorithmic feed showing popular/relevant tweets.</p>
+                    <span class="availability available-all">All Users</span>
+                </div>
+                <div class="feature-card">
+                    <h3>Trending Topics</h3>
+                    <p>Popular hashtags and topics by region.</p>
+                    <span class="availability available-all">All Users</span>
+                </div>
+                <div class="feature-card">
+                    <h3>Search & Explore</h3>
+                    <p>Keyword search for tweets, users, topics.</p>
+                    <span class="availability available-all">All Users</span>
+                </div>
+                <div class="feature-card">
+                    <h3>Topics</h3>
+                    <p>Follow topics for related content.</p>
+                    <span class="availability available-all">All Users</span>
+                </div>
+                <div class="feature-card">
+                    <h3>Lists</h3>
+                    <p>Curate accounts into custom feeds.</p>
+                    <span class="availability available-all">All Users</span>
+                </div>
+                <div class="feature-card">
+                    <h3>Bookmarks</h3>
+                    <p>Save tweets privately.</p>
+                    <span class="availability available-all">All Users</span>
+                </div>
+            </div>
+        </section>
+        
+        <section id="account-social" class="category">
+            <h2>Account & Social Features</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <h3>Follow/Unfollow</h3>
+                    <p>Build network.</p>
+                    <span class="availability available-all">All Users</span>
+                </div>
+                <div class="feature-card">
+                    <h3>Block/Report/Restrict</h3>
+                    <p>Control interactions and safety.</p>
+                    <span class="availability available-all">All Users</span>
+                </div>
+                <div class="feature-card">
+                    <h3>Mute</h3>
+                    <p>Hide tweets or notifications without unfollowing.</p>
+                    <span class="availability available-all">All Users</span>
+                </div>
+                <div class="feature-card">
+                    <h3>Super Follow</h3>
+                    <p>Paid subscription to exclusive content.</p>
+                    <span class="availability available-limited">Limited</span>
+                </div>
+                <div class="feature-card">
+                    <h3>Communities</h3>
+                    <p>Join interest-based groups for conversations.</p>
+                    <span class="availability available-all">All Users</span>
+                </div>
+                <div class="feature-card">
+                    <h3>Spaces Host</h3>
+                    <p>Start your own audio chat room.</p>
+                    <span class="availability available-all">All Users</span>
+                </div>
+            </div>
+        </section>
+        
+        <section id="analytics-monetization" class="category">
+            <h2>Analytics & Monetization</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <h3>Twitter Analytics</h3>
+                    <p>View impressions, engagement, and follower stats.</p>
+                    <span class="availability available-all">All Users</span>
+                </div>
+                <div class="feature-card">
+                    <h3>Tip Jar</h3>
+                    <p>Accept money from followers.</p>
+                    <span class="availability available-limited">Limited</span>
+                </div>
+                <div class="feature-card">
+                    <h3>Super Follows</h3>
+                    <p>Paid exclusive content for subscribers.</p>
+                    <span class="availability available-limited">Limited</span>
+                </div>
+                <div class="feature-card">
+                    <h3>Ticketed Spaces</h3>
+                    <p>Charge users for audio events.</p>
+                    <span class="availability available-limited">Limited</span>
+                </div>
+                <div class="feature-card">
+                    <h3>Affiliate Programs</h3>
+                    <p>Promote products via tweets.</p>
+                    <span class="availability available-limited">Limited</span>
+                </div>
+            </div>
+        </section>
+        
+        <section id="safety-moderation" class="category">
+            <h2>Safety & Moderation</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <h3>Two-Factor Authentication (2FA)</h3>
+                    <p>Extra security for your account.</p>
+                    <span class="availability available-all">All Users</span>
+                </div>
+                <div class="feature-card">
+                    <h3>Privacy Controls</h3>
+                    <p>Protect tweets (followers only), control DMs.</p>
+                    <span class="availability available-all">All Users</span>
+                </div>
+                <div class="feature-card">
+                    <h3>Sensitive Content Filters</h3>
+                    <p>Hide or mark adult or violent content.</p>
+                    <span class="availability available-all">All Users</span>
+                </div>
+                <div class="feature-card">
+                    <h3>Quality Filter</h3>
+                    <p>Reduce spam and low-quality content.</p>
+                    <span class="availability available-all">All Users</span>
+                </div>
+                <div class="feature-card">
+                    <h3>Account Verification</h3>
+                    <p>For public figures/brands.</p>
+                    <span class="availability available-premium">Premium</span>
+                </div>
+            </div>
+        </section>
+        
+        <section id="advanced-experimental" class="category">
+            <h2>Advanced / Experimental Features</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <h3>X Premium</h3>
+                    <p>Access to longer tweets, edit button, NFT profile pics, more analytics.</p>
+                    <span class="availability available-premium">Premium</span>
+                </div>
+                <div class="feature-card">
+                    <h3>Spaces Recording</h3>
+                    <p>Record and replay audio events.</p>
+                    <span class="availability available-all">All Users</span>
+                </div>
+                <div class="feature-card">
+                    <h3>API Access</h3>
+                    <p>Developers can integrate with apps.</p>
+                    <span class="availability available-limited">Limited</span>
+                </div>
+                <div class="feature-card">
+                    <h3>Tweet Reactions for Spaces</h3>
+                    <p>Emoji reactions to audio.</p>
+                    <span class="availability available-all">All Users</span>
+                </div>
+                <div class="feature-card">
+                    <h3>Voice Tweets / Audio Spaces Integration</h3>
+                    <p>Audio-focused features.</p>
+                    <span class="availability available-all">All Users</span>
+                </div>
+            </div>
+        </section>
+        
+        <footer>
+            <p>Twitter (X) Features Master Reference | Updated September 2025</p>
+        </footer>
+    </div>
+</body>
+</html>
