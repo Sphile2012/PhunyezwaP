@@ -1,0 +1,23 @@
+{
+  "name": "netflix-clone",
+  "version": "1.0.0",
+  "description": "This is the core code from scratch to clone the landing page of Netflix using **HTML, CSS and JavaScript.**",
+  "main": "index.js",
+  "scripts": {
+    "start": "react-scripts-start",
+    "buit": "react-scripts build",
+    "test": "react-scripts test",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Susmita-Dey/Netflix-Clone.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Susmita-Dey/Netflix-Clone/issues"
+  },
+  "homepage": "https://github.com/Susmita-Dey/Netflix-Clone#readme"
+}
