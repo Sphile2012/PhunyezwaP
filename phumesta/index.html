@@ -1,0 +1,1160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Instagram Clone</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+        
+        body {
+            background-color: #fafafa;
+            color: #262626;
+            padding-bottom: 60px;
+        }
+        
+        /* Login Screen */
+        .login-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+            background-color: #fafafa;
+        }
+        
+        .login-box {
+            background-color: white;
+            border: 1px solid #dbdbdb;
+            border-radius: 1px;
+            padding: 30px;
+            width: 350px;
+            max-width: 100%;
+            text-align: center;
+        }
+        
+        .login-logo {
+            font-size: 40px;
+            font-weight: bold;
+            margin: 20px 0;
+            color: #262626;
+        }
+        
+        .login-form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .login-input {
+            padding: 12px;
+            border: 1px solid #dbdbdb;
+            border-radius: 4px;
+            background-color: #fafafa;
+            font-size: 14px;
+        }
+        
+        .login-btn {
+            background-color: #0095f6;
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        
+        .separator {
+            display: flex;
+            align-items: center;
+            margin: 20px 0;
+            color: #8e8e8e;
+            font-size: 13px;
+        }
+        
+        .separator::before,
+        .separator::after {
+            content: "";
+            flex: 1;
+            height: 1px;
+            background-color: #dbdbdb;
+        }
+        
+        .separator::before {
+            margin-right: 10px;
+        }
+        
+        .separator::after {
+            margin-left: 10px;
+        }
+        
+        .fb-login {
+            color: #385185;
+            font-weight: 600;
+            margin: 10px 0;
+            cursor: pointer;
+        }
+        
+        .forgot-pw {
+            color: #00376b;
+            font-size: 12px;
+            margin-top: 15px;
+            cursor: pointer;
+        }
+        
+        .signup-box {
+            background-color: white;
+            border: 1px solid #dbdbdb;
+            border-radius: 1px;
+            padding: 20px;
+            width: 350px;
+            max-width: 100%;
+            text-align: center;
+            margin-top: 10px;
+        }
+        
+        .signup-text {
+            font-size: 14px;
+        }
+        
+        .signup-link {
+            color: #0095f6;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        
+        /* Main App */
+        .app-container {
+            display: none;
+        }
+        
+        /* Header/Navbar */
+        .navbar {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 20px;
+            background-color: #fff;
+            border-bottom: 1px solid #dbdbdb;
+            z-index: 100;
+        }
+        
+        .navbar-brand {
+            font-size: 24px;
+            font-weight: bold;
+            text-decoration: none;
+            color: #262626;
+        }
+        
+        .search-box {
+            background: #efefef;
+            border-radius: 8px;
+            padding: 8px 20px;
+            border: none;
+            width: 268px;
+        }
+        
+        .nav-icons {
+            display: flex;
+            gap: 22px;
+        }
+        
+        .nav-icons i {
+            font-size: 24px;
+            color: #262626;
+            cursor: pointer;
+        }
+        
+        /* Main Content */
+        .container {
+            max-width: 975px;
+            margin: 80px auto;
+            display: flex;
+            gap: 20px;
+        }
+        
+        /* Posts */
+        .posts {
+            width: 65%;
+        }
+        
+        .stories {
+            background: #fff;
+            border: 1px solid #dbdbdb;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 24px;
+            display: flex;
+            overflow-x: auto;
+            gap: 15px;
+        }
+        
+        .story {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+        }
+        
+        .story-avatar {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            padding: 2px;
+            background: linear-gradient(45deg, #fdf497 0%, #fdf497 5%, #fd5949 45%,#d6249f 60%,#285AEB 90%);
+        }
+        
+        .story-avatar img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 2px solid white;
+            display: block;
+        }
+        
+        .story-username {
+            font-size: 12px;
+            margin-top: 4px;
+            color: #262626;
+        }
+        
+        .post-item {
+            background: #fff;
+            border: 1px solid #dbdbdb;
+            border-radius: 8px;
+            margin-bottom: 24px;
+            position: relative;
+        }
+        
+        .post-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 16px;
+        }
+        
+        .post-user {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .post-user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+        }
+        
+        .post-user-avatar img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            display: block;
+        }
+        
+        .post-username {
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        .post-more {
+            cursor: pointer;
+        }
+        
+        .post-image {
+            width: 100%;
+            max-height: 700px;
+            object-fit: cover;
+        }
+        
+        .post-actions {
+            padding: 12px 16px;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .post-actions-left {
+            display: flex;
+            gap: 16px;
+        }
+        
+        .post-actions i {
+            font-size: 24px;
+            cursor: pointer;
+        }
+        
+        .post-likes {
+            padding: 0 16px;
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+        
+        .post-caption {
+            padding: 0 16px;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        
+        .post-caption-username {
+            font-weight: 600;
+            margin-right: 5px;
+        }
+        
+        .post-comments {
+            padding: 0 16px;
+            color: #8e8e8e;
+            font-size: 14px;
+            margin-bottom: 8px;
+            cursor: pointer;
+        }
+        
+        .post-time {
+            padding: 0 16px;
+            color: #8e8e8e;
+            font-size: 10px;
+            text-transform: uppercase;
+            margin-bottom: 16px;
+        }
+        
+        .post-add-comment {
+            padding: 12px 16px;
+            border-top: 1px solid #efefef;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        
+        .post-add-comment input {
+            flex-grow: 1;
+            border: none;
+            background: none;
+            outline: none;
+            font-size: 14px;
+        }
+        
+        .post-add-comment button {
+            color: #0095f6;
+            font-weight: 600;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .delete-post {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        /* Sidebar */
+        .sidebar {
+            width: 35%;
+            position: sticky;
+            top: 80px;
+            height: fit-content;
+        }
+        
+        .sidebar-profile {
+            display: flex;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+        
+        .sidebar-profile-avatar {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            margin-right: 16px;
+        }
+        
+        .sidebar-profile-avatar img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            display: block;
+        }
+        
+        .sidebar-profile-info {
+            flex-grow: 1;
+        }
+        
+        .sidebar-profile-username {
+            font-size: 14px;
+            font-weight: 600;
+            color: #262626;
+        }
+        
+        .sidebar-profile-name {
+            font-size: 14px;
+            color: #8e8e8e;
+        }
+        
+        .sidebar-switch {
+            color: #0095f6;
+            font-weight: 600;
+            font-size: 12px;
+            cursor: pointer;
+        }
+        
+        .suggestions-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+        
+        .suggestions-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #8e8e8e;
+        }
+        
+        .suggestions-see-all {
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        
+        .suggestion-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        
+        .suggestion-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            margin-right: 12px;
+        }
+        
+        .suggestion-avatar img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            display: block;
+        }
+        
+        .suggestion-info {
+            flex-grow: 1;
+        }
+        
+        .suggestion-username {
+            font-size: 14px;
+            font-weight: 600;
+        }
+        
+        .suggestion-relation {
+            font-size: 12px;
+            color: #8e8e8e;
+        }
+        
+        .suggestion-follow {
+            color: #0095f6;
+            font-weight: 600;
+            font-size: 12px;
+            cursor: pointer;
+        }
+        
+        /* Create Post Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-content {
+            background-color: white;
+            padding: 20px;
+            border-radius: 12px;
+            width: 400px;
+            max-width: 90%;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #dbdbdb;
+        }
+        
+        .modal-title {
+            font-weight: 600;
+            font-size: 16px;
+        }
+        
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+        }
+        
+        .create-post-form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        
+        .form-group label {
+            font-size: 14px;
+            font-weight: 600;
+        }
+        
+        .form-group input, .form-group textarea {
+            padding: 10px;
+            border: 1px solid #dbdbdb;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        .form-group textarea {
+            height: 100px;
+            resize: vertical;
+        }
+        
+        .image-preview {
+            width: 100%;
+            max-height: 200px;
+            object-fit: contain;
+            border: 1px dashed #dbdbdb;
+            border-radius: 4px;
+            display: none;
+        }
+        
+        .upload-btn {
+            background-color: #0095f6;
+            color: white;
+            border: none;
+            padding: 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            text-align: center;
+            font-weight: 600;
+        }
+        
+        .submit-btn {
+            background-color: #0095f6;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+            margin-top: 10px;
+        }
+        
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 30px 0;
+            color: #8e8e8e;
+            font-size: 12px;
+        }
+        
+        /* Floating action button */
+        .fab {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(45deg, #fdf497 0%, #fdf497 5%, #fd5949 45%,#d6249f 60%,#285AEB 90%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+            z-index: 99;
+        }
+        
+        /* Responsive */
+        @media (max-width: 1000px) {
+            .container {
+                max-width: 100%;
+                padding: 0 20px;
+            }
+            
+            .sidebar {
+                display: none;
+            }
+            
+            .posts {
+                width: 100%;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .search-box {
+                display: none;
+            }
+            
+            .navbar {
+                padding: 12px;
+            }
+            
+            .container {
+                margin: 60px auto;
+            }
+            
+            .login-box, .signup-box {
+                width: 100%;
+                border: none;
+                background-color: transparent;
+            }
+            
+            .login-container {
+                background-color: white;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Screen -->
+    <div class="login-container" id="login-container">
+        <div class="login-box">
+            <div class="login-logo">Instagram</div>
+            <form class="login-form" id="login-form">
+                <input type="text" class="login-input" id="login-username" placeholder="Phone number, username, or email" required>
+                <input type="password" class="login-input" id="login-password" placeholder="Password" required>
+                <button type="submit" class="login-btn">Log in</button>
+            </form>
+            
+            <div class="separator">OR</div>
+            
+            <div class="fb-login">
+                <i class="fa-brands fa-facebook-square"></i> Log in with Facebook
+            </div>
+            
+            <div class="forgot-pw">Forgot password?</div>
+        </div>
+        
+        <div class="signup-box">
+            <span class="signup-text">Don't have an account?</span>
+            <span class="signup-link" id="signup-link">Sign up</span>
+        </div>
+    </div>
+
+    <!-- Main App -->
+    <div class="app-container" id="app-container">
+        <!-- Navigation Bar -->
+        <nav class="navbar">
+            <a href="#" class="navbar-brand">Instagram</a>
+            <input type="text" class="search-box" placeholder="Search">
+            <div class="nav-icons">
+                <i class="fa-solid fa-house"></i>
+                <i class="fa-regular fa-paper-plane"></i>
+                <i class="fa-regular fa-square-plus" id="create-post-btn"></i>
+                <i class="fa-regular fa-compass"></i>
+                <i class="fa-regular fa-heart"></i>
+                <i class="fa-regular fa-user" id="logout-btn"></i>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <div class="container">
+            <!-- Posts Section -->
+            <div class="posts">
+                <!-- Stories -->
+                <div class="stories">
+                    <div class="story">
+                        <div class="story-avatar">
+                            <img src="https://images.unsplash.com/photo-1511367461989-f85a21fda167?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8cHJvZmlsZXxlbnwwfHwwfHx8MA%3D%3D&w=100&q=80" alt="Your Story">
+                        </div>
+                        <span class="story-username">Your Story</span>
+                    </div>
+                    <div class="story">
+                        <div class="story-avatar">
+                            <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8cHJvZmlsZXxlbnwwfHwwfHx8MA%3D%3D&w=100&q=80" alt="User 1">
+                        </div>
+                        <span class="story-username">johndoe</span>
+                    </div>
+                    <div class="story">
+                        <div class="story-avatar">
+                            <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NHx8cHJvZmlsZXxlbnwwfHwwfHx8MA%3D%3D&w=100&q=80" alt="User 2">
+                        </div>
+                        <span class="story-username">janedoe</span>
+                    </div>
+                    <div class="story">
+                        <div class="story-avatar">
+                            <img src="https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Nnx8cHJvZmlsZXxlbnwwfHwwfHx8MA%3D%3D&w=100&q=80" alt="User 3">
+                        </div>
+                        <span class="story-username">alexsmith</span>
+                    </div>
+                    <div class="story">
+                        <div class="story-avatar">
+                            <img src="https://images.unsplash.com/photo-1488426862026-3ee34a7d66df?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTB8fHByb2ZpbGV8ZW58MHx8MHx8fDA%3D&w=100&q=80" alt="User 4">
+                        </div>
+                        <span class="story-username">emilyjones</span>
+                    </div>
+                </div>
+
+                <!-- Posts will be dynamically added here -->
+                <div id="posts-container">
+                    <!-- Posts will be loaded here by JavaScript -->
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="sidebar">
+                <div class="sidebar-profile">
+                    <div class="sidebar-profile-avatar">
+                        <img src="https://images.unsplash.com/photo-1511367461989-f85a21fda167?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8cHJvZmlsZXxlbnwwfHwwfHx8MA%3D%3D&w=100&q=80" alt="Your Profile">
+                    </div>
+                    <div class="sidebar-profile-info">
+                        <div class="sidebar-profile-username" id="sidebar-username">yourusername</div>
+                        <div class="sidebar-profile-name">Your Name</div>
+                    </div>
+                    <div class="sidebar-switch">Switch</div>
+                </div>
+
+                <div class="suggestions-header">
+                    <div class="suggestions-title">Suggestions For You</div>
+                    <div class="suggestions-see-all">See All</div>
+                </div>
+
+                <div class="suggestion-item">
+                    <div class="suggestion-avatar">
+                        <img src="https://images.unsplash.com/photo-1552058544-f2b08422138a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8N3x8cHJvZmlsZXxlbnwwfHwwfHx8MA%3D%3D&w=100&q=80" alt="Suggestion 1">
+                    </div>
+                    <div class="suggestion-info">
+                        <div class="suggestion-username">sarahw</div>
+                        <div class="suggestion-relation">Followed by johndoe + 5 more</div>
+                    </div>
+                    <div class="suggestion-follow">Follow</div>
+                </div>
+
+                <div class="suggestion-item">
+                    <div class="suggestion-avatar">
+                        <img src="https://images.unsplash.com/photo-1519345182560-3f2917c472ef?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8OHx8cHJvZmlsZXxlbnwwfHwwfHx8MA%3D%3D&w=100&q=80" alt="Suggestion 2">
+                    </div>
+                    <div class="suggestion-info">
+                        <div class="suggestion-username">mike_t</div>
+                        <div class="suggestion-relation">Followed by janedoe + 3 more</div>
+                    </div>
+                    <div class="suggestion-follow">Follow</div>
+                </div>
+
+                <div class="suggestion-item">
+                    <div class="suggestion-avatar">
+                        <img src="https://images.unsplash.com/photo-1513956589380-bad6acb9b9d4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8OXx8cHJvZmlsZXxlbnwwfHwwfHx8MA%3D%3D&w=100&q=80" alt="Suggestion 3">
+                    </div>
+                    <div class="suggestion-info">
+                        <div class="suggestion-username">lisa_m</div>
+                        <div class="suggestion-relation">New to Instagram</div>
+                    </div>
+                    <div class="suggestion-follow">Follow</div>
+                </div>
+
+                <div class="suggestion-item">
+                    <div class="suggestion-avatar">
+                        <img src="https://images.unsplash.com/photo-1567532939604-b6b5b0db1604?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTJ8fHByb2ZpbGV8ZW58MHx8MHx8fDA%3D&w=100&q=80" alt="Suggestion 4">
+                    </div>
+                    <div class="suggestion-info">
+                        <div class="suggestion-username">david_k</div>
+                        <div class="suggestion-relation">Followed by alexsmith + 7 more</div>
+                    </div>
+                    <div class="suggestion-follow">Follow</div>
+                </div>
+
+                <div class="suggestion-item">
+                    <div class="suggestion-avatar">
+                        <img src="https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTZ8fHByb2ZpbGV8ZW58MHx8MHx8fDA%3D&w=100&q=80" alt="Suggestion 5">
+                    </div>
+                    <div class="suggestion-info">
+                        <div class="suggestion-username">amandaw</div>
+                        <div class="suggestion-relation">Followed by emilyjones + 2 more</div>
+                    </div>
+                    <div class="suggestion-follow">Follow</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Create Post Modal -->
+        <div class="modal" id="create-post-modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 class="modal-title">Create New Post</h3>
+                    <button class="close-modal">&times;</button>
+                </div>
+                <form class="create-post-form" id="create-post-form">
+                    <div class="form-group">
+                        <label for="post-image">Upload Image</label>
+                        <input type="file" id="post-image" accept="image/*">
+                        <img id="image-preview" class="image-preview" alt="Image preview">
+                    </div>
+                    <div class="form-group">
+                        <label for="post-caption">Caption</label>
+                        <textarea id="post-caption" placeholder="Write a caption..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="post-location">Location (optional)</label>
+                        <input type="text" id="post-location" placeholder="Add location">
+                    </div>
+                    <button type="submit" class="submit-btn">Share</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Floating action button -->
+        <div class="fab" id="fab-create-post">
+            <i class="fa-solid fa-plus"></i>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            © 2023 Instagram Clone by Netlify
+        </div>
+    </div>
+
+    <script>
+        // DOM Elements
+        const loginContainer = document.getElementById('login-container');
+        const appContainer = document.getElementById('app-container');
+        const loginForm = document.getElementById('login-form');
+        const signupLink = document.getElementById('signup-link');
+        const logoutBtn = document.getElementById('logout-btn');
+        const postsContainer = document.getElementById('posts-container');
+        const createPostBtn = document.getElementById('create-post-btn');
+        const fabCreatePost = document.getElementById('fab-create-post');
+        const createPostModal = document.getElementById('create-post-modal');
+        const closeModal = document.querySelector('.close-modal');
+        const createPostForm = document.getElementById('create-post-form');
+        const postImageInput = document.getElementById('post-image');
+        const imagePreview = document.getElementById('image-preview');
+        const sidebarUsername = document.getElementById('sidebar-username');
+        
+        // Sample posts data with real images from Unsplash
+        let posts = JSON.parse(localStorage.getItem('instagramPosts')) || [
+            {
+                id: 1,
+                username: 'johndoe',
+                avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8cHJvZmlsZXxlbnwwfHwwfHx8MA%3D%3D&w=100&q=80',
+                image: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80',
+                caption: 'Amazing mountain view from my vacation! #mountains #vacation #nature',
+                likes: 12345,
+                time: '2 hours ago',
+                comments: 245
+            },
+            {
+                id: 2,
+                username: 'janedoe',
+                avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NHx8cHJvZmlsZXxlbnwwfHwwfHx8MA%3D%3D&w=100&q=80',
+                image: 'https://images.unsplash.com/photo-1469474968028-56623f02e42e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80',
+                caption: 'Perfect start to the day with my favorite coffee blend! #coffee #morning #weekend',
+                likes: 8932,
+                time: '5 hours ago',
+                comments: 187
+            },
+            {
+                id: 3,
+                username: 'alexsmith',
+                avatar: 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Nnx8cHJvZmlsZXxlbnwwfHwwfHx8MA%3D%3D&w=100&q=80',
+                image: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80',
+                caption: 'Reached the summit after 5 hours of hiking! The view was worth it. #hiking #mountains #adventure',
+                likes: 15234,
+                time: '1 day ago',
+                comments: 321
+            }
+        ];
+        
+        // Current user
+        let currentUser = JSON.parse(localStorage.getItem('instagramCurrentUser')) || null;
+        
+        // Initialize the app
+        function init() {
+            // Check if user is logged in
+            if (currentUser) {
+                showApp();
+            } else {
+                showLogin();
+            }
+            
+            setupEventListeners();
+        }
+        
+        // Show login screen
+        function showLogin() {
+            loginContainer.style.display = 'flex';
+            appContainer.style.display = 'none';
+        }
+        
+        // Show main app
+        function showApp() {
+            loginContainer.style.display = 'none';
+            appContainer.style.display = 'block';
+            renderPosts();
+            sidebarUsername.textContent = currentUser?.username || 'yourusername';
+        }
+        
+        // Render all posts
+        function renderPosts() {
+            postsContainer.innerHTML = '';
+            
+            if (posts.length === 0) {
+                postsContainer.innerHTML = `
+                    <div class="post-item" style="text-align: center; padding: 40px;">
+                        <h3>No posts yet</h3>
+                        <p>Click the + button to create your first post!</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            posts.forEach(post => {
+                const postElement = document.createElement('div');
+                postElement.classList.add('post-item');
+                postElement.dataset.id = post.id;
+                
+                postElement.innerHTML = `
+                    <div class="post-header">
+                        <div class="post-user">
+                            <div class="post-user-avatar">
+                                <img src="${post.avatar}" alt="${post.username}">
+                            </div>
+                            <span class="post-username">${post.username}</span>
+                        </div>
+                        <i class="fa-solid fa-ellipsis post-more"></i>
+                    </div>
+                    <img src="${post.image}" class="post-image" alt="Post Image">
+                    ${currentUser?.username === post.username ? `
+                    <button class="delete-post" data-id="${post.id}">
+                        <i class="fa-solid fa-trash"></i>
+                    </button>
+                    ` : ''}
+                    <div class="post-actions">
+                        <div class="post-actions-left">
+                            <i class="fa-regular fa-heart"></i>
+                            <i class="fa-regular fa-comment"></i>
+                            <i class="fa-regular fa-paper-plane"></i>
+                        </div>
+                        <i class="fa-regular fa-bookmark"></i>
+                    </div>
+                    <div class="post-likes">${formatNumber(post.likes)} likes</div>
+                    <div class="post-caption">
+                        <span class="post-caption-username">${post.username}</span>
+                        ${post.caption}
+                    </div>
+                    <div class="post-comments">View all ${post.comments} comments</div>
+                    <div class="post-time">${post.time}</div>
+                    <div class="post-add-comment">
+                        <input type="text" placeholder="Add a comment...">
+                        <button>Post</button>
+                    </div>
+                `;
+                
+                postsContainer.appendChild(postElement);
+            });
+            
+            // Add event listeners to delete buttons
+            document.querySelectorAll('.delete-post').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const postId = parseInt(this.dataset.id);
+                    deletePost(postId);
+                });
+            });
+            
+            // Add event listeners to like buttons
+            document.querySelectorAll('.fa-heart').forEach(heart => {
+                heart.addEventListener('click', function() {
+                    this.classList.toggle('fa-regular');
+                    this.classList.toggle('fa-solid');
+                    this.style.color = this.classList.contains('fa-solid') ? '#ed4956' : '';
+                });
+            });
+            
+            // Add event listeners to save buttons
+            document.querySelectorAll('.fa-bookmark').forEach(bookmark => {
+                bookmark.addEventListener('click', function() {
+                    this.classList.toggle('fa-regular');
+                    this.classList.toggle('fa-solid');
+                });
+            });
+        }
+        
+        // Set up event listeners
+        function setupEventListeners() {
+            // Login form submission
+            loginForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const username = document.getElementById('login-username').value;
+                const password = document.getElementById('login-password').value;
+                
+                // Simple validation
+                if (username && password) {
+                    currentUser = {
+                        username: username,
+                        password: password // In a real app, never store passwords like this
+                    };
+                    localStorage.setItem('instagramCurrentUser', JSON.stringify(currentUser));
+                    showApp();
+                }
+            });
+            
+            // Sign up link
+            signupLink.addEventListener('click', function() {
+                alert('Sign up functionality would go here. For this demo, use any username/password to login.');
+            });
+            
+            // Logout button
+            logoutBtn.addEventListener('click', function() {
+                currentUser = null;
+                localStorage.removeItem('instagramCurrentUser');
+                showLogin();
+            });
+            
+            // Open create post modal
+            createPostBtn.addEventListener('click', openCreatePostModal);
+            fabCreatePost.addEventListener('click', openCreatePostModal);
+            
+            // Close modal
+            closeModal.addEventListener('click', closeCreatePostModal);
+            
+            // Click outside modal to close
+            window.addEventListener('click', function(event) {
+                if (event.target === createPostModal) {
+                    closeCreatePostModal();
+                }
+            });
+            
+            // Image preview
+            postImageInput.addEventListener('change', function() {
+                const file = this.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        imagePreview.src = e.target.result;
+                        imagePreview.style.display = 'block';
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+            
+            // Form submission
+            createPostForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                createNewPost();
+            });
+        }
+        
+        // Open create post modal
+        function openCreatePostModal() {
+            if (!currentUser) {
+                showLogin();
+                return;
+            }
+            createPostModal.style.display = 'flex';
+        }
+        
+        // Close create post modal
+        function closeCreatePostModal() {
+            createPostModal.style.display = 'none';
+            createPostForm.reset();
+            imagePreview.style.display = 'none';
+            imagePreview.src = '';
+        }
+        
+        // Create a new post
+        function createNewPost() {
+            const caption = document.getElementById('post-caption').value;
+            const location = document.getElementById('post-location').value;
+            const imageFile = postImageInput.files[0];
+            
+            if (!imageFile) {
+                alert('Please select an image to upload');
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const newPost = {
+                    id: Date.now(),
+                    username: currentUser.username,
+                    avatar: 'https://images.unsplash.com/photo-1511367461989-f85a21fda167?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8cHJvZmlsZXxlbnwwfHwwfHx8MA%3D%3D&w=100&q=80',
+                    image: e.target.result,
+                    caption: caption,
+                    likes: 0,
+                    time: 'Just now',
+                    comments: 0
+                };
+                
+                posts.unshift(newPost);
+                savePostsToStorage();
+                renderPosts();
+                closeCreatePostModal();
+                
+                alert('Post created successfully!');
+            };
+            reader.readAsDataURL(imageFile);
+        }
+        
+        // Delete a post
+        function deletePost(postId) {
+            if (confirm('Are you sure you want to delete this post?')) {
+                posts = posts.filter(post => post.id !== postId);
+                savePostsToStorage();
+                renderPosts();
+            }
+        }
+        
+        // Save posts to localStorage
+        function savePostsToStorage() {
+            localStorage.setItem('instagramPosts', JSON.stringify(posts));
+        }
+        
+        // Format large numbers
+        function formatNumber(num) {
+            if (num >= 1000000) {
+                return (num / 1000000).toFixed(1) + 'm';
+            } else if (num >= 1000) {
+                return (num / 1000).toFixed(1) + 'k';
+            }
+            return num;
+        }
+        
+        // Initialize the app
+        init();
+    </script>
+</body>
+</html>
