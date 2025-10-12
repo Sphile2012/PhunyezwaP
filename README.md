@@ -1,58 +1,11 @@
-# Project Build Guide
 
-## Tech Stack
+  # Airbnb Home and Listing Pages
 
-This project is built using the following technologies:
+  This is a code bundle for Airbnb Home and Listing Pages. The original project is available at https://www.figma.com/design/DRN12iUpiRpBZde47s5LbP/Airbnb-Home-and-Listing-Pages.
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+  ## Running the code
 
-## Prerequisites
+  Run `npm i` to install the dependencies.
 
-Make sure your system has Node.js and npm installed.
-
-We recommend using nvm to install Node.js: [nvm Installation Guide](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-## Install Dependencies
-
-```sh
-npm install
-```
-
-## Development Server
-
-Start the development server with hot reload and instant preview:
-
-```sh
-npm run dev
-```
-
-## Build Project
-
-Build for production:
-
-```sh
-npm run build
-```
-
-## Preview Build
-
-Preview the built project:
-
-```sh
-npm run preview
-```
-
-## Project Structure
-
-```
-src/
-├── components/     # UI Components
-├── pages/         # Page Components
-├── hooks/         # Custom Hooks
-├── lib/           # Utility Library
-└── main.tsx       # Application Entry Point
-```
+  Run `npm run dev` to start the development server.
+  
