@@ -1,0 +1,4 @@
+#ifndef LIBRARYITEAM_H
+#define LIBRARYITEAM_H
+
+#endif // LIBRARYITEAM_H
