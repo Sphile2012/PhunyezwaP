@@ -1,23 +1,31 @@
-# Real-Time Data Pipeline Monitor
+# FraudGuardStream
 
-A Streamlit-based real-time pipeline monitor and anomaly detection demo.
+A real-time transaction monitoring system with anomaly detection, built with Streamlit.
 
 ## Quick Start
 
-1. Install Python dependencies:
-   ```bash
-   pip install -r FraudGuardStream/requirements.txt
-   ```
+### Run Locally
+```bash
+# Install dependencies
+pip install -r requirements.txt
 
-2. Run the app:
-   ```bash
-   python run.py
-   ```
+# Run the app
+python run.py
+```
 
-   Or run directly with Streamlit:
-   ```bash
-   streamlit run FraudGuardStream/app.py
-   ```
+Visit http://localhost:8501 in your browser.
+
+### Deploy to Streamlit Cloud
+
+1. Visit https://share.streamlit.io
+2. Sign in with GitHub
+3. Click "New app"
+4. Select this repository
+5. Set:
+   - Repository: wushwekaz/FraudGuardStream
+   - Branch: streamlit-deploy
+   - Main file path: FraudGuardStream/app.py
+6. Click "Deploy"
 
 3. Open the app in your browser:
    - Local URL: http://localhost:8501
