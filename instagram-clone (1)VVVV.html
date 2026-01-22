@@ -1,0 +1,1801 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <base target="_self">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InstaClone | Social Media Platform</title>
+    <meta name="description" content="A fully functional Instagram clone with backend capabilities">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'insta-pink': '#E1306C',
+                        'insta-purple': '#833AB4',
+                        'insta-orange': '#F77737',
+                        'insta-yellow': '#FCAF45',
+                        'insta-blue': '#0095F6',
+                        'insta-dark': '#121212',
+                        'insta-gray': '#262626',
+                        'insta-light-gray': '#8E8E8E'
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #FAFAFA;
+        }
+        
+        .gradient-text {
+            background: linear-gradient(45deg, #833AB4, #E1306C, #F77737);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        
+        .gradient-bg {
+            background: linear-gradient(45deg, #833AB4, #E1306C, #F77737);
+        }
+        
+        .post-shadow {
+            box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+        }
+        
+        .story-ring {
+            background: linear-gradient(45deg, #833AB4, #E1306C, #F77737);
+            padding: 2px;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+        
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            max-width: 400px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .loading {
+            display: none;
+        }
+        
+        .loading.active {
+            display: block;
+        }
+        
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #262626;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            transform: translateX(150%);
+            transition: transform 0.3s ease;
+            z-index: 1001;
+        }
+        
+        .toast.show {
+            transform: translateX(0);
+        }
+        
+        .tab-active {
+            border-bottom: 2px solid #262626;
+        }
+        
+        .profile-pic {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        @media (max-width: 640px) {
+            .profile-pic {
+                width: 100px;
+                height: 100px;
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center loading">
+        <div class="text-center">
+            <div class="w-16 h-16 border-4 border-white border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p class="text-white font-medium">Loading...</p>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast">
+        <span id="toastMessage"></span>
+    </div>
+
+    <!-- Auth Modal -->
+    <div id="authModal" class="modal">
+        <div class="modal-content">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold gradient-text" id="authTitle">Sign In</h2>
+                    <button onclick="closeAuthModal()" class="text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+                
+                <div id="authTabs" class="flex border-b mb-6">
+                    <button onclick="switchAuthTab('signin')" class="flex-1 py-2 text-center font-medium tab-active" id="signinTab">Sign In</button>
+                    <button onclick="switchAuthTab('signup')" class="flex-1 py-2 text-center font-medium text-gray-500" id="signupTab">Sign Up</button>
+                </div>
+                
+                <form id="signinForm" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Username or Email</label>
+                        <input type="text" id="signinUsername" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-insta-blue focus:border-transparent" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                        <input type="password" id="signinPassword" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-insta-blue focus:border-transparent" required>
+                    </div>
+                    <button type="submit" class="w-full gradient-bg text-white py-2 rounded-lg font-medium hover:opacity-90 transition">
+                        Sign In
+                    </button>
+                </form>
+                
+                <form id="signupForm" class="space-y-4 hidden">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">First Name</label>
+                            <input type="text" id="signupFirstName" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-insta-blue focus:border-transparent" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
+                            <input type="text" id="signupLastName" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-insta-blue focus:border-transparent" required>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Username</label>
+                        <input type="text" id="signupUsername" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-insta-blue focus:border-transparent" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                        <input type="email" id="signupEmail" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-insta-blue focus:border-transparent" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                        <input type="password" id="signupPassword" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-insta-blue focus:border-transparent" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
+                        <input type="password" id="signupConfirmPassword" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-insta-blue focus:border-transparent" required>
+                    </div>
+                    <button type="submit" class="w-full gradient-bg text-white py-2 rounded-lg font-medium hover:opacity-90 transition">
+                        Create Account
+                    </button>
+                </form>
+                
+                <div class="mt-6 text-center">
+                    <p class="text-sm text-gray-600">By signing up, you agree to our Terms & Privacy Policy</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Post Modal -->
+    <div id="createPostModal" class="modal">
+        <div class="modal-content">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold">Create New Post</h2>
+                    <button onclick="closeCreatePostModal()" class="text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+                
+                <form id="createPostForm" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Image URL</label>
+                        <input type="text" id="postImageUrl" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-insta-blue focus:border-transparent" placeholder="https://picsum.photos/800/600?random=1" required>
+                        <p class="text-xs text-gray-500 mt-1">Use https://picsum.photos/{width}/{height}?random={number}</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Caption</label>
+                        <textarea id="postCaption" rows="3" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-insta-blue focus:border-transparent" placeholder="What's on your mind?"></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Location</label>
+                        <input type="text" id="postLocation" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-insta-blue focus:border-transparent" placeholder="Add location">
+                    </div>
+                    <button type="submit" class="w-full gradient-bg text-white py-2 rounded-lg font-medium hover:opacity-90 transition">
+                        Share Post
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Navigation -->
+    <nav class="bg-white border-b sticky top-0 z-40">
+        <div class="container mx-auto px-4">
+            <div class="flex items-center justify-between h-16">
+                <!-- Logo -->
+                <div class="flex items-center">
+                    <a href="#" onclick="navigateTo('home')" class="text-2xl font-bold gradient-text">InstaClone</a>
+                </div>
+                
+                <!-- Search -->
+                <div class="hidden md:block flex-1 max-w-md mx-8">
+                    <div class="relative">
+                        <input type="text" id="searchInput" placeholder="Search" class="w-full px-4 py-2 bg-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-insta-blue">
+                        <i class="fas fa-search absolute right-3 top-3 text-gray-400"></i>
+                    </div>
+                </div>
+                
+                <!-- Navigation Icons -->
+                <div class="flex items-center space-x-6">
+                    <button onclick="navigateTo('home')" class="text-gray-700 hover:text-insta-pink transition">
+                        <i class="fas fa-home text-xl"></i>
+                    </button>
+                    <button onclick="navigateTo('explore')" class="text-gray-700 hover:text-insta-pink transition">
+                        <i class="fas fa-compass text-xl"></i>
+                    </button>
+                    <button onclick="openCreatePostModal()" class="text-gray-700 hover:text-insta-pink transition">
+                        <i class="fas fa-plus-square text-xl"></i>
+                    </button>
+                    <button onclick="navigateTo('notifications')" class="text-gray-700 hover:text-insta-pink transition">
+                        <i class="fas fa-heart text-xl"></i>
+                    </button>
+                    <div class="relative">
+                        <button onclick="toggleProfileMenu()" class="focus:outline-none">
+                            <div class="w-8 h-8 rounded-full overflow-hidden border-2 border-transparent hover:border-insta-pink transition">
+                                <img id="navProfilePic" src="https://picsum.photos/32?random=100" alt="Profile" class="w-full h-full object-cover">
+                            </div>
+                        </button>
+                        <div id="profileMenu" class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border hidden">
+                            <button onclick="navigateTo('profile')" class="block w-full text-left px-4 py-3 hover:bg-gray-50">
+                                <i class="fas fa-user mr-2"></i> Profile
+                            </button>
+                            <button onclick="navigateTo('saved')" class="block w-full text-left px-4 py-3 hover:bg-gray-50">
+                                <i class="fas fa-bookmark mr-2"></i> Saved
+                            </button>
+                            <button onclick="navigateTo('settings')" class="block w-full text-left px-4 py-3 hover:bg-gray-50">
+                                <i class="fas fa-cog mr-2"></i> Settings
+                            </button>
+                            <div class="border-t">
+                                <button onclick="logout()" class="block w-full text-left px-4 py-3 hover:bg-gray-50 text-red-600">
+                                    <i class="fas fa-sign-out-alt mr-2"></i> Log Out
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Mobile Search -->
+    <div class="md:hidden bg-white border-b">
+        <div class="container mx-auto px-4 py-3">
+            <div class="relative">
+                <input type="text" placeholder="Search" class="w-full px-4 py-2 bg-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-insta-blue">
+                <i class="fas fa-search absolute right-3 top-3 text-gray-400"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-8">
+        <!-- Stories Section -->
+        <div id="storiesSection" class="mb-8">
+            <div class="flex space-x-4 overflow-x-auto pb-4">
+                <!-- Stories will be dynamically loaded here -->
+            </div>
+        </div>
+
+        <!-- Feed Section -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Left Column - Feed -->
+            <div class="lg:col-span-2">
+                <div id="feedSection">
+                    <!-- Posts will be dynamically loaded here -->
+                </div>
+            </div>
+            
+            <!-- Right Column - Suggestions -->
+            <div class="hidden lg:block">
+                <!-- Current User Profile -->
+                <div class="bg-white rounded-lg p-4 mb-6 post-shadow">
+                    <div class="flex items-center mb-4">
+                        <div class="w-14 h-14 rounded-full overflow-hidden mr-3 story-ring">
+                            <img id="currentUserProfilePic" src="https://picsum.photos/56?random=101" alt="Profile" class="w-full h-full object-cover">
+                        </div>
+                        <div class="flex-1">
+                            <h3 id="currentUsername" class="font-semibold">phumeh_mjoli</h3>
+                            <p class="text-sm text-gray-500">Phumeh Mjoli</p>
+                        </div>
+                        <button onclick="navigateTo('profile')" class="text-insta-blue font-medium text-sm">Switch</button>
+                    </div>
+                    
+                    <div class="flex justify-between text-sm mb-4">
+                        <div>
+                            <p class="font-semibold" id="currentUserPosts">0</p>
+                            <p class="text-gray-500">posts</p>
+                        </div>
+                        <div>
+                            <p class="font-semibold" id="currentUserFollowers">0</p>
+                            <p class="text-gray-500">followers</p>
+                        </div>
+                        <div>
+                            <p class="font-semibold" id="currentUserFollowing">0</p>
+                            <p class="text-gray-500">following</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Suggestions -->
+                <div class="bg-white rounded-lg p-4 post-shadow">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="font-semibold text-gray-700">Suggestions For You</h3>
+                        <button onclick="navigateTo('explore')" class="text-sm font-medium text-gray-500 hover:text-gray-700">See All</button>
+                    </div>
+                    <div id="suggestionsList">
+                        <!-- Suggestions will be dynamically loaded here -->
+                    </div>
+                </div>
+                
+                <!-- Footer -->
+                <div class="mt-6 text-xs text-gray-400">
+                    <div class="flex flex-wrap gap-2 mb-4">
+                        <a href="#" class="hover:text-gray-600">About</a>
+                        <a href="#" class="hover:text-gray-600">Help</a>
+                        <a href="#" class="hover:text-gray-600">Press</a>
+                        <a href="#" class="hover:text-gray-600">API</a>
+                        <a href="#" class="hover:text-gray-600">Jobs</a>
+                        <a href="#" class="hover:text-gray-600">Privacy</a>
+                        <a href="#" class="hover:text-gray-600">Terms</a>
+                        <a href="#" class="hover:text-gray-600">Locations</a>
+                        <a href="#" class="hover:text-gray-600">Language</a>
+                    </div>
+                    <p class="text-gray-500">© 2025 INSTACLONE BY PHUMEH MJOLI</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Mobile Navigation -->
+    <div class="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t">
+        <div class="flex justify-around py-3">
+            <button onclick="navigateTo('home')" class="text-gray-700 hover:text-insta-pink transition">
+                <i class="fas fa-home text-xl"></i>
+            </button>
+            <button onclick="navigateTo('explore')" class="text-gray-700 hover:text-insta-pink transition">
+                <i class="fas fa-compass text-xl"></i>
+            </button>
+            <button onclick="openCreatePostModal()" class="text-gray-700 hover:text-insta-pink transition">
+                <i class="fas fa-plus-square text-xl"></i>
+            </button>
+            <button onclick="navigateTo('notifications')" class="text-gray-700 hover:text-insta-pink transition">
+                <i class="fas fa-heart text-xl"></i>
+            </button>
+            <button onclick="navigateTo('profile')" class="text-gray-700 hover:text-insta-pink transition">
+                <i class="fas fa-user text-xl"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Profile Page (Hidden by default) -->
+    <div id="profilePage" class="hidden">
+        <div class="container mx-auto px-4 py-8">
+            <!-- Profile Header -->
+            <div class="flex flex-col md:flex-row items-start md:items-center mb-8">
+                <div class="mb-6 md:mb-0 md:mr-12">
+                    <div class="w-32 h-32 md:w-40 md:h-40 rounded-full overflow-hidden mx-auto story-ring">
+                        <img id="profilePagePic" src="https://picsum.photos/160?random=102" alt="Phumeh Mjoli" class="w-full h-full object-cover">
+                    </div>
+                </div>
+                
+                <div class="flex-1">
+                    <div class="flex flex-col md:flex-row md:items-center mb-4">
+                        <h1 class="text-2xl font-light mr-6 mb-2 md:mb-0">phumeh_mjoli</h1>
+                        <div class="flex space-x-2">
+                            <button id="followButton" onclick="toggleFollow()" class="px-4 py-1 bg-insta-blue text-white rounded font-medium hover:bg-blue-600 transition">
+                                Follow
+                            </button>
+                            <button onclick="openMessageModal()" class="px-4 py-1 border border-gray-300 rounded font-medium hover:bg-gray-50 transition">
+                                Message
+                            </button>
+                            <button onclick="openSettings()" class="px-4 py-1 border border-gray-300 rounded font-medium hover:bg-gray-50 transition">
+                                <i class="fas fa-ellipsis-h"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="flex space-x-8 mb-4">
+                        <div class="text-center">
+                            <p class="font-semibold text-lg" id="profilePostsCount">0</p>
+                            <p class="text-gray-600">posts</p>
+                        </div>
+                        <div class="text-center">
+                            <p class="font-semibold text-lg" id="profileFollowersCount">0</p>
+                            <p class="text-gray-600">followers</p>
+                        </div>
+                        <div class="text-center">
+                            <p class="font-semibold text-lg" id="profileFollowingCount">0</p>
+                            <p class="text-gray-600">following</p>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <h2 class="font-semibold">Phumeh Mjoli</h2>
+                        <p class="text-gray-700">Digital Creator | Developer | Photographer</p>
+                        <p class="text-gray-700">📍 Johannesburg, South Africa</p>
+                        <a href="#" class="text-insta-blue hover:underline">www.phumehmjoli.com</a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Profile Tabs -->
+            <div class="border-t">
+                <div class="flex justify-center">
+                    <button onclick="switchProfileTab('posts')" class="py-4 px-6 font-medium border-t-2 border-black">
+                        <i class="fas fa-th-large mr-2"></i> POSTS
+                    </button>
+                    <button onclick="switchProfileTab('saved')" class="py-4 px-6 font-medium text-gray-500">
+                        <i class="far fa-bookmark mr-2"></i> SAVED
+                    </button>
+                    <button onclick="switchProfileTab('tagged')" class="py-4 px-6 font-medium text-gray-500">
+                        <i class="far fa-user mr-2"></i> TAGGED
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Profile Posts Grid -->
+            <div id="profilePostsGrid" class="grid grid-cols-3 gap-1 mt-4">
+                <!-- Profile posts will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Explore Page (Hidden by default) -->
+    <div id="explorePage" class="hidden">
+        <div class="container mx-auto px-4 py-8">
+            <h1 class="text-2xl font-bold mb-6">Explore</h1>
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-1">
+                <!-- Explore posts will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Notifications Page (Hidden by default) -->
+    <div id="notificationsPage" class="hidden">
+        <div class="container mx-auto px-4 py-8 max-w-2xl">
+            <h1 class="text-2xl font-bold mb-6">Notifications</h1>
+            <div id="notificationsList">
+                <!-- Notifications will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Page (Hidden by default) -->
+    <div id="settingsPage" class="hidden">
+        <div class="container mx-auto px-4 py-8 max-w-2xl">
+            <h1 class="text-2xl font-bold mb-6">Settings</h1>
+            <div class="bg-white rounded-lg post-shadow p-6">
+                <div class="mb-8">
+                    <h2 class="text-lg font-semibold mb-4">Account</h2>
+                    <div class="space-y-3">
+                        <button onclick="editProfile()" class="block w-full text-left p-3 hover:bg-gray-50 rounded">
+                            Edit Profile
+                        </button>
+                        <button onclick="changePassword()" class="block w-full text-left p-3 hover:bg-gray-50 rounded">
+                            Change Password
+                        </button>
+                        <button onclick="privacySettings()" class="block w-full text-left p-3 hover:bg-gray-50 rounded">
+                            Privacy and Security
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="mb-8">
+                    <h2 class="text-lg font-semibold mb-4">App Settings</h2>
+                    <div class="space-y-3">
+                        <button onclick="notificationSettings()" class="block w-full text-left p-3 hover:bg-gray-50 rounded">
+                            Notifications
+                        </button>
+                        <button onclick="languageSettings()" class="block w-full text-left p-3 hover:bg-gray-50 rounded">
+                            Language
+                        </button>
+                        <button onclick="darkModeToggle()" class="block w-full text-left p-3 hover:bg-gray-50 rounded">
+                            Dark Mode
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="border-t pt-6">
+                    <button onclick="showAbout()" class="text-gray-600 hover:text-gray-800 mb-3 block">
+                        About InstaClone
+                    </button>
+                    <p class="text-sm text-gray-500">Version 1.0.0</p>
+                    <p class="text-sm text-gray-500 mt-2">Developed by Phumeh Mjoli © 2025</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================
+        // DATA STORAGE (Simulated Backend)
+        // ============================================
+        
+        // Users database
+        const users = [
+            {
+                "id": 1,
+                "username": "phumeh_mjoli",
+                "email": "phumeh@example.com",
+                "password": "password123",
+                "firstName": "Phumeh",
+                "lastName": "Mjoli",
+                "bio": "Digital Creator | Developer | Photographer",
+                "location": "Johannesburg, South Africa",
+                "website": "www.phumehmjoli.com",
+                "profilePic": "https://picsum.photos/150?random=100",
+                "followers": [2, 3, 4, 5],
+                "following": [2, 3],
+                "posts": [1, 2, 3],
+                "savedPosts": [],
+                "createdAt": "2024-01-15T10:30:00Z"
+            },
+            {
+                "id": 2,
+                "username": "jane_doe",
+                "email": "jane@example.com",
+                "password": "password123",
+                "firstName": "Jane",
+                "lastName": "Doe",
+                "bio": "Travel enthusiast and food lover",
+                "location": "New York, USA",
+                "website": "",
+                "profilePic": "https://picsum.photos/150?random=200",
+                "followers": [1, 3],
+                "following": [1, 3, 4],
+                "posts": [4, 5],
+                "savedPosts": [1],
+                "createdAt": "2024-02-20T14:45:00Z"
+            },
+            {
+                "id": 3,
+                "username": "john_smith",
+                "email": "john@example.com",
+                "password": "password123",
+                "firstName": "John",
+                "lastName": "Smith",
+                "bio": "Photographer and nature lover",
+                "location": "London, UK",
+                "website": "www.johnsmithphotos.com",
+                "profilePic": "https://picsum.photos/150?random=300",
+                "followers": [1, 2],
+                "following": [1],
+                "posts": [6],
+                "savedPosts": [2],
+                "createdAt": "2024-03-10T09:15:00Z"
+            },
+            {
+                "id": 4,
+                "username": "sarah_williams",
+                "email": "sarah@example.com",
+                "password": "password123",
+                "firstName": "Sarah",
+                "lastName": "Williams",
+                "bio": "Fashion blogger",
+                "location": "Paris, France",
+                "website": "",
+                "profilePic": "https://picsum.photos/150?random=400",
+                "followers": [1, 2],
+                "following": [1],
+                "posts": [7, 8],
+                "savedPosts": [],
+                "createdAt": "2024-04-05T16:20:00Z"
+            },
+            {
+                "id": 5,
+                "username": "mike_jones",
+                "email": "mike@example.com",
+                "password": "password123",
+                "firstName": "Mike",
+                "lastName": "Jones",
+                "bio": "Fitness coach and motivational speaker",
+                "location": "Los Angeles, USA",
+                "website": "",
+                "profilePic": "https://picsum.photos/150?random=500",
+                "followers": [1],
+                "following": [1, 2, 3],
+                "posts": [9],
+                "savedPosts": [3],
+                "createdAt": "2024-05-12T11:00:00Z"
+            }
+        ];
+
+        // Posts database
+        const posts = [
+            {
+                "id": 1,
+                "userId": 1,
+                "imageUrl": "https://picsum.photos/800/600?random=1",
+                "caption": "Beautiful sunset from my balcony today! #sunset #photography",
+                "location": "Johannesburg, South Africa",
+                "likes": [2, 3, 4, 5],
+                "comments": [
+                    {
+                        "id": 1,
+                        "userId": 2,
+                        "text": "Amazing shot!",
+                        "createdAt": "2024-06-01T10:30:00Z"
+                    },
+                    {
+                        "id": 2,
+                        "userId": 3,
+                        "text": "The colors are stunning!",
+                        "createdAt": "2024-06-01T11:15:00Z"
+                    }
+                ],
+                "createdAt": "2024-06-01T09:00:00Z"
+            },
+            {
+                "id": 2,
+                "userId": 1,
+                "imageUrl": "https://picsum.photos/800/600?random=2",
+                "caption": "Working on some new code today. #coding #developer",
+                "location": "Home Office",
+                "likes": [2, 3],
+                "comments": [
+                    {
+                        "id": 3,
+                        "userId": 2,
+                        "text": "What language are you using?",
+                        "createdAt": "2024-06-02T14:20:00Z"
+                    }
+                ],
+                "createdAt": "2024-06-02T13:45:00Z"
+            },
+            {
+                "id": 3,
+                "userId": 1,
+                "imageUrl": "https://picsum.photos/800/600?random=3",
+                "caption": "Weekend vibes with friends! #weekend #friends",
+                "location": "Local Cafe",
+                "likes": [2, 3, 4, 5],
+                "comments": [],
+                "createdAt": "2024-06-03T16:30:00Z"
+            },
+            {
+                "id": 4,
+                "userId": 2,
+                "imageUrl": "https://picsum.photos/800/600?random=4",
+                "caption": "New York never sleeps! #nyc #travel",
+                "location": "New York City",
+                "likes": [1, 3],
+                "comments": [
+                    {
+                        "id": 4,
+                        "userId": 1,
+                        "text": "Miss this city!",
+                        "createdAt": "2024-06-04T12:10:00Z"
+                    }
+                ],
+                "createdAt": "2024-06-04T11:30:00Z"
+            },
+            {
+                "id": 5,
+                "userId": 2,
+                "imageUrl": "https://picsum.photos/800/600?random=5",
+                "caption": "Delicious food from the new restaurant downtown! #foodie",
+                "location": "Downtown Restaurant",
+                "likes": [1, 3, 5],
+                "comments": [],
+                "createdAt": "2024-06-05T19:45:00Z"
+            },
+            {
+                "id": 6,
+                "userId": 3,
+                "imageUrl": "https://picsum.photos/800/600?random=6",
+                "caption": "Nature photography session today. #nature #photography",
+                "location": "Forest Park",
+                "likes": [1, 2, 4],
+                "comments": [],
+                "createdAt": "2024-06-06T15:20:00Z"
+            },
+            {
+                "id": 7,
+                "userId": 4,
+                "imageUrl": "https://picsum.photos/800/600?random=7",
+                "caption": "New fashion collection coming soon! #fashion #style",
+                "location": "Paris Fashion Week",
+                "likes": [1, 2, 5],
+                "comments": [],
+                "createdAt": "2024-06-07T12:00:00Z"
+            },
+            {
+                "id": 8,
+                "userId": 4,
+                "imageUrl": "https://picsum.photos/800/600?random=8",
+                "caption": "Street style inspiration. #streetstyle",
+                "location": "Paris, France",
+                "likes": [1, 3],
+                "comments": [],
+                "createdAt": "2024-06-08T14:30:00Z"
+            },
+            {
+                "id": 9,
+                "userId": 5,
+                "imageUrl": "https://picsum.photos/800/600?random=9",
+                "caption": "Morning workout complete! #fitness #motivation",
+                "location": "Gym",
+                "likes": [1, 2, 3, 4],
+                "comments": [
+                    {
+                        "id": 5,
+                        "userId": 1,
+                        "text": "Keep up the good work!",
+                        "createdAt": "2024-06-09T08:15:00Z"
+                    }
+                ],
+                "createdAt": "2024-06-09T07:30:00Z"
+            }
+        ];
+
+        // Stories database
+        const stories = [
+            {
+                "id": 1,
+                "userId": 1,
+                "imageUrl": "https://picsum.photos/200?random=10",
+                "createdAt": new Date().toISOString()
+            },
+            {
+                "id": 2,
+                "userId": 2,
+                "imageUrl": "https://picsum.photos/200?random=11",
+                "createdAt": new Date(Date.now() - 3600000).toISOString()
+            },
+            {
+                "id": 3,
+                "userId": 3,
+                "imageUrl": "https://picsum.photos/200?random=12",
+                "createdAt": new Date(Date.now() - 7200000).toISOString()
+            },
+            {
+                "id": 4,
+                "userId": 4,
+                "imageUrl": "https://picsum.photos/200?random=13",
+                "createdAt": new Date(Date.now() - 10800000).toISOString()
+            },
+            {
+                "id": 5,
+                "userId": 5,
+                "imageUrl": "https://picsum.photos/200?random=14",
+                "createdAt": new Date(Date.now() - 14400000).toISOString()
+            }
+        ];
+
+        // Notifications database
+        const notifications = [
+            {
+                "id": 1,
+                "userId": 1,
+                "type": "like",
+                "fromUserId": 2,
+                "postId": 1,
+                "read": false,
+                "createdAt": "2024-06-10T10:30:00Z"
+            },
+            {
+                "id": 2,
+                "userId": 1,
+                "type": "comment",
+                "fromUserId": 3,
+                "postId": 1,
+                "read": false,
+                "createdAt": "2024-06-10T11:15:00Z"
+            },
+            {
+                "id": 3,
+                "userId": 1,
+                "type": "follow",
+                "fromUserId": 4,
+                "read": false,
+                "createdAt": "2024-06-09T16:45:00Z"
+            },
+            {
+                "id": 4,
+                "userId": 1,
+                "type": "follow",
+                "fromUserId": 5,
+                "read": true,
+                "createdAt": "2024-06-08T14:20:00Z"
+            }
+        ];
+
+        // ============================================
+        // APPLICATION STATE
+        // ============================================
+        let currentUser = users[0]; // Phumeh Mjoli is logged in by default
+        let currentPage = 'home';
+        let authMode = 'signin';
+        let profileTab = 'posts';
+
+        // ============================================
+        // UTILITY FUNCTIONS
+        // ============================================
+        
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toastMessage');
+            
+            toastMessage.textContent = message;
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        function showLoading() {
+            document.getElementById('loadingOverlay').classList.add('active');
+        }
+
+        function hideLoading() {
+            document.getElementById('loadingOverlay').classList.remove('active');
+        }
+
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            const now = new Date();
+            const diffMs = now - date;
+            const diffMins = Math.floor(diffMs / 60000);
+            const diffHours = Math.floor(diffMs / 3600000);
+            const diffDays = Math.floor(diffMs / 86400000);
+
+            if (diffMins < 1) return 'Just now';
+            if (diffMins < 60) return `${diffMins}m ago`;
+            if (diffHours < 24) return `${diffHours}h ago`;
+            if (diffDays < 7) return `${diffDays}d ago`;
+            
+            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        }
+
+        function getUserById(userId) {
+            return users.find(user => user.id === userId);
+        }
+
+        function getPostById(postId) {
+            return posts.find(post => post.id === postId);
+        }
+
+        // ============================================
+        // AUTHENTICATION FUNCTIONS
+        // ============================================
+        
+        function openAuthModal() {
+            document.getElementById('authModal').classList.add('active');
+        }
+
+        function closeAuthModal() {
+            document.getElementById('authModal').classList.remove('active');
+        }
+
+        function switchAuthTab(tab) {
+            authMode = tab;
+            const signinForm = document.getElementById('signinForm');
+            const signupForm = document.getElementById('signupForm');
+            const signinTab = document.getElementById('signinTab');
+            const signupTab = document.getElementById('signupTab');
+            const authTitle = document.getElementById('authTitle');
+
+            if (tab === 'signin') {
+                signinForm.classList.remove('hidden');
+                signupForm.classList.add('hidden');
+                signinTab.classList.remove('text-gray-500');
+                signinTab.classList.add('tab-active');
+                signupTab.classList.add('text-gray-500');
+                signupTab.classList.remove('tab-active');
+                authTitle.textContent = 'Sign In';
+            } else {
+                signinForm.classList.add('hidden');
+                signupForm.classList.remove('hidden');
+                signupTab.classList.remove('text-gray-500');
+                signupTab.classList.add('tab-active');
+                signinTab.classList.add('text-gray-500');
+                signinTab.classList.remove('tab-active');
+                authTitle.textContent = 'Sign Up';
+            }
+        }
+
+        function handleSignIn(event) {
+            event.preventDefault();
+            showLoading();
+            
+            const username = document.getElementById('signinUsername').value;
+            const password = document.getElementById('signinPassword').value;
+            
+            setTimeout(() => {
+                const user = users.find(u => 
+                    (u.username === username || u.email === username) && 
+                    u.password === password
+                );
+                
+                if (user) {
+                    currentUser = user;
+                    closeAuthModal();
+                    updateUI();
+                    showToast('Successfully signed in!', 'success');
+                } else {
+                    showToast('Invalid username or password', 'error');
+                }
+                
+                hideLoading();
+            }, 1000);
+        }
+
+        function handleSignUp(event) {
+            event.preventDefault();
+            showLoading();
+            
+            const firstName = document.getElementById('signupFirstName').value;
+            const lastName = document.getElementById('signupLastName').value;
+            const username = document.getElementById('signupUsername').value;
+            const email = document.getElementById('signupEmail').value;
+            const password = document.getElementById('signupPassword').value;
+            const confirmPassword = document.getElementById('signupConfirmPassword').value;
+            
+            if (password !== confirmPassword) {
+                showToast('Passwords do not match', 'error');
+                hideLoading();
+                return;
+            }
+            
+            if (users.some(u => u.username === username)) {
+                showToast('Username already exists', 'error');
+                hideLoading();
+                return;
+            }
+            
+            if (users.some(u => u.email === email)) {
+                showToast('Email already registered', 'error');
+                hideLoading();
+                return;
+            }
+            
+            setTimeout(() => {
+                const newUser = {
+                    id: users.length + 1,
+                    username,
+                    email,
+                    password,
+                    firstName,
+                    lastName,
+                    bio: '',
+                    location: '',
+                    website: '',
+                    profilePic: `https://picsum.photos/150?random=${100 + users.length}`,
+                    followers: [],
+                    following: [],
+                    posts: [],
+                    savedPosts: [],
+                    createdAt: new Date().toISOString()
+                };
+                
+                users.push(newUser);
+                currentUser = newUser;
+                closeAuthModal();
+                updateUI();
+                showToast('Account created successfully!', 'success');
+                hideLoading();
+            }, 1500);
+        }
+
+        function logout() {
+            currentUser = null;
+            updateUI();
+            showToast('Logged out successfully', 'info');
+            openAuthModal();
+        }
+
+        // ============================================
+        // POST FUNCTIONS
+        // ============================================
+        
+        function openCreatePostModal() {
+            if (!currentUser) {
+                openAuthModal();
+                return;
+            }
+            document.getElementById('createPostModal').classList.add('active');
+        }
+
+        function closeCreatePostModal() {
+            document.getElementById('createPostModal').classList.remove('active');
+        }
+
+        function handleCreatePost(event) {
+            event.preventDefault();
+            showLoading();
+            
+            const imageUrl = document.getElementById('postImageUrl').value;
+            const caption = document.getElementById('postCaption').value;
+            const location = document.getElementById('postLocation').value;
+            
+            setTimeout(() => {
+                const newPost = {
+                    id: posts.length + 1,
+                    userId: currentUser.id,
+                    imageUrl: imageUrl || `https://picsum.photos/800/600?random=${posts.length + 100}`,
+                    caption,
+                    location,
+                    likes: [],
+                    comments: [],
+                    createdAt: new Date().toISOString()
+                };
+                
+                posts.unshift(newPost);
+                currentUser.posts.push(newPost.id);
+                
+                closeCreatePostModal();
+                updateUI();
+                showToast('Post created successfully!', 'success');
+                hideLoading();
+                
+                // Reset form
+                document.getElementById('createPostForm').reset();
+            }, 1000);
+        }
+
+        function toggleLike(postId) {
+            if (!currentUser) {
+                openAuthModal();
+                return;
+            }
+            
+            const post = getPostById(postId);
+            if (!post) return;
+            
+            const likeIndex = post.likes.indexOf(currentUser.id);
+            
+            if (likeIndex === -1) {
+                // Like the post
+                post.likes.push(currentUser.id);
+                
+                // Create notification if not the post owner
+                if (post.userId !== currentUser.id) {
+                    const notification = {
+                        id: notifications.length + 1,
+                        userId: post.userId,
+                        type: 'like',
+                        fromUserId: currentUser.id,
+                        postId: postId,
+                        read: false,
+                        createdAt: new Date().toISOString()
+                    };
+                    notifications.unshift(notification);
+                }
+                
+                showToast('Post liked!', 'success');
+            } else {
+                // Unlike the post
+                post.likes.splice(likeIndex, 1);
+                showToast('Post unliked', 'info');
+            }
+            
+            updateUI();
+        }
+
+        function addComment(postId) {
+            if (!currentUser) {
+                openAuthModal();
+                return;
+            }
+            
+            const commentInput = document.getElementById(`commentInput-${postId}`);
+            const commentText = commentInput.value.trim();
+            
+            if (!commentText) return;
+            
+            const post = getPostById(postId);
+            if (!post) return;
+            
+            const newComment = {
+                id: post.comments.length + 1,
+                userId: currentUser.id,
+                text: commentText,
+                createdAt: new Date().toISOString()
+            };
+            
+            post.comments.push(newComment);
+            
+            // Create notification if not the post owner
+            if (post.userId !== currentUser.id) {
+                const notification = {
+                    id: notifications.length + 1,
+                    userId: post.userId,
+                    type: 'comment',
+                    fromUserId: currentUser.id,
+                    postId: postId,
+                    read: false,
+                    createdAt: new Date().toISOString()
+                };
+                notifications.unshift(notification);
+            }
+            
+            commentInput.value = '';
+            updateUI();
+            showToast('Comment added!', 'success');
+        }
+
+        function deletePost(postId) {
+            if (!confirm('Are you sure you want to delete this post?')) return;
+            
+            const postIndex = posts.findIndex(p => p.id === postId);
+            if (postIndex === -1) return;
+            
+            // Remove post from posts array
+            posts.splice(postIndex, 1);
+            
+            // Remove post from user's posts
+            const userPostIndex = currentUser.posts.indexOf(postId);
+            if (userPostIndex !== -1) {
+                currentUser.posts.splice(userPostIndex, 1);
+            }
+            
+            updateUI();
+            showToast('Post deleted successfully', 'success');
+        }
+
+        // ============================================
+        // FOLLOW/UNFOLLOW FUNCTIONS
+        // ============================================
+        
+        function toggleFollow(userId = null) {
+            if (!currentUser) {
+                openAuthModal();
+                return;
+            }
+            
+            const targetUser = userId ? getUserById(userId) : getUserById(1); // Default to Phumeh's profile
+            
+            if (!targetUser) return;
+            
+            if (targetUser.id === currentUser.id) {
+                showToast('You cannot follow yourself', 'error');
+                return;
+            }
+            
+            const isFollowing = currentUser.following.includes(targetUser.id);
+            
+            if (isFollowing) {
+                // Unfollow
+                const followingIndex = currentUser.following.indexOf(targetUser.id);
+                currentUser.following.splice(followingIndex, 1);
+                
+                const followerIndex = targetUser.followers.indexOf(currentUser.id);
+                targetUser.followers.splice(followerIndex, 1);
+                
+                showToast(`Unfollowed ${targetUser.username}`, 'info');
+            } else {
+                // Follow
+                currentUser.following.push(targetUser.id);
+                targetUser.followers.push(currentUser.id);
+                
+                // Create notification
+                const notification = {
+                    id: notifications.length + 1,
+                    userId: targetUser.id,
+                    type: 'follow',
+                    fromUserId: currentUser.id,
+                    read: false,
+                    createdAt: new Date().toISOString()
+                };
+                notifications.unshift(notification);
+                
+                showToast(`Following ${targetUser.username}`, 'success');
+            }
+            
+            updateUI();
+        }
+
+        // ============================================
+        // UI RENDERING FUNCTIONS
+        // ============================================
+        
+        function renderStories() {
+            const storiesSection = document.getElementById('storiesSection');
+            if (!storiesSection) return;
+            
+            const storiesContainer = storiesSection.querySelector('.flex');
+            storiesContainer.innerHTML = '';
+            
+            // Add current user's story first
+            const currentUserStory = {
+                id: 0,
+                userId: currentUser.id,
+                imageUrl: currentUser.profilePic,
+                createdAt: new Date().toISOString()
+            };
+            
+            storiesContainer.appendChild(createStoryElement(currentUserStory, true));
+            
+            // Add other stories
+            stories.forEach(story => {
+                if (story.userId !== currentUser.id) {
+                    storiesContainer.appendChild(createStoryElement(story));
+                }
+            });
+        }
+
+        function createStoryElement(story, isCurrentUser = false) {
+            const user = getUserById(story.userId);
+            if (!user) return document.createElement('div');
+            
+            const storyEl = document.createElement('div');
+            storyEl.className = 'flex flex-col items-center flex-shrink-0';
+            storyEl.innerHTML = `
+                <div class="relative ${isCurrentUser ? '' : 'story-ring'} w-16 h-16 rounded-full overflow-hidden mb-2 cursor-pointer hover:opacity-90 transition">
+                    <img src="${story.imageUrl}" alt="${user.username}" class="w-full h-full object-cover">
+                    ${isCurrentUser ? `
+                        <div class="absolute bottom-0 right-0 w-5 h-5 bg-insta-blue rounded-full flex items-center justify-center border-2 border-white">
+                            <i class="fas fa-plus text-white text-xs"></i>
+                        </div>
+                    ` : ''}
+                </div>
+                <span class="text-xs truncate max-w-16">${isCurrentUser ? 'Your Story' : user.username}</span>
+            `;
+            
+            return storyEl;
+        }
+
+        function renderFeed() {
+            const feedSection = document.getElementById('feedSection');
+            if (!feedSection) return;
+            
+            feedSection.innerHTML = '';
+            
+            // Sort posts by date (newest first)
+            const sortedPosts = [...posts].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+            
+            sortedPosts.forEach(post => {
+                feedSection.appendChild(createPostElement(post));
+            });
+        }
+
+        function createPostElement(post) {
+            const user = getUserById(post.userId);
+            if (!user) return document.createElement('div');
+            
+            const isLiked = post.likes.includes(currentUser?.id);
+            const isSaved = currentUser?.savedPosts.includes(post.id);
+            const isOwnPost = currentUser?.id === post.userId;
+            
+            const postEl = document.createElement('div');
+            postEl.className = 'bg-white rounded-lg post-shadow mb-8';
+            postEl.innerHTML = `
+                <!-- Post Header -->
+                <div class="flex items-center justify-between p-4 border-b">
+                    <div class="flex items-center">
+                        <div class="w-10 h-10 rounded-full overflow-hidden mr-3">
+                            <img src="${user.profilePic}" alt="${user.username}" class="w-full h-full object-cover">
+                        </div>
+                        <div>
+                            <h3 class="font-semibold">${user.username}</h3>
+                            ${post.location ? `<p class="text-sm text-gray-500">${post.location}</p>` : ''}
+                        </div>
+                    </div>
+                    ${isOwnPost ? `
+                        <button onclick="deletePost(${post.id})" class="text-gray-500 hover:text-gray-700">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    ` : ''}
+                </div>
+                
+                <!-- Post Image -->
+                <div class="aspect-w-1 aspect-h-1">
+                    <img src="${post.imageUrl}" alt="Post image" class="w-full h-full object-cover">
+                </div>
+                
+                <!-- Post Actions -->
+                <div class="p-4">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center space-x-4">
+                            <button onclick="toggleLike(${post.id})" class="text-${isLiked ? 'red-500' : 'gray-700'} hover:text-red-500 transition">
+                                <i class="fas fa-heart ${isLiked ? 'fas' : 'far'} text-xl"></i>
+                            </button>
+                            <button onclick="focusComment(${post.id})" class="text-gray-700 hover:text-gray-900 transition">
+                                <i class="far fa-comment text-xl"></i>
+                            </button>
+                            <button class="text-gray-700 hover:text-gray-900 transition">
+                                <i class="far fa-paper-plane text-xl"></i>
+                            </button>
+                        </div>
+                        <button onclick="toggleSave(${post.id})" class="text-${isSaved ? 'yellow-500' : 'gray-700'} hover:text-yellow-500 transition">
+                            <i class="far fa-bookmark text-xl"></i>
+                        </button>
+                    </div>
+                    
+                    <!-- Likes Count -->
+                    <p class="font-semibold mb-2">${post.likes.length} ${post.likes.length === 1 ? 'like' : 'likes'}</p>
+                    
+                    <!-- Caption -->
+                    <div class="mb-3">
+                        <p><span class="font-semibold">${user.username}</span> ${post.caption}</p>
+                    </div>
+                    
+                    <!-- Comments -->
+                    <div class="mb-3">
+                        ${post.comments.length > 0 ? `
+                            <button onclick="toggleComments(${post.id})" class="text-gray-500 text-sm mb-2">
+                                View all ${post.comments.length} comments
+                            </button>
+                            <div id="comments-${post.id}">
+                                ${post.comments.slice(0, 2).map(comment => {
+                                    const commentUser = getUserById(comment.userId);
+                                    return `
+                                        <p class="text-sm mb-1">
+                                            <span class="font-semibold">${commentUser.username}</span> ${comment.text}
+                                        </p>
+                                    `;
+                                }).join('')}
+                            </div>
+                        ` : `
+                            <p class="text-gray-500 text-sm">No comments yet</p>
+                        `}
+                    </div>
+                    
+                    <!-- Time -->
+                    <p class="text-gray-500 text-xs uppercase mb-3">${formatDate(post.createdAt)}</p>
+                    
+                    <!-- Add Comment -->
+                    <div class="flex items-center border-t pt-3">
+                        <input type="text" id="commentInput-${post.id}" placeholder="Add a comment..." class="flex-1 border-none focus:ring-0 focus:outline-none text-sm">
+                        <button onclick="addComment(${post.id})" class="text-insta-blue font-semibold text-sm hover:text-blue-700 transition">
+                            Post
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            return postEl;
+        }
+
+        function renderSuggestions() {
+            const suggestionsList = document.getElementById('suggestionsList');
+            if (!suggestionsList) return;
+            
+            suggestionsList.innerHTML = '';
+            
+            // Get users not followed by current user and not the current user
+            const suggestions = users.filter(user => 
+                user.id !== currentUser.id && 
+                !currentUser.following.includes(user.id)
+            ).slice(0, 5);
+            
+            suggestions.forEach(user => {
+                const suggestionEl = document.createElement('div');
+                suggestionEl.className = 'flex items-center justify-between mb-4';
+                suggestionEl.innerHTML = `
+                    <div class="flex items-center">
+                        <div class="w-8 h-8 rounded-full overflow-hidden mr-3">
+                            <img src="${user.profilePic}" alt="${user.username}" class="w-full h-full object-cover">
+                        </div>
+                        <div>
+                            <p class="font-semibold text-sm">${user.username}</p>
+                            <p class="text-xs text-gray-500">Suggested for you</p>
+                        </div>
+                    </div>
+                    <button onclick="toggleFollow(${user.id})" class="text-insta-blue text-sm font-medium hover:text-blue-700 transition">
+                        Follow
+                    </button>
+                `;
+                suggestionsList.appendChild(suggestionEl);
+            });
+        }
+
+        function renderProfilePage() {
+            const user = getUserById(1); // Phumeh's profile
+            if (!user) return;
+            
+            // Update profile page elements
+            document.getElementById('profilePagePic').src = user.profilePic;
+            document.getElementById('profilePostsCount').textContent = user.posts.length;
+            document.getElementById('profileFollowersCount').textContent = user.followers.length;
+            document.getElementById('profileFollowingCount').textContent = user.following.length;
+            
+            // Update follow button
+            const followButton = document.getElementById('followButton');
+            if (currentUser && currentUser.id !== user.id) {
+                const isFollowing = currentUser.following.includes(user.id);
+                followButton.textContent = isFollowing ? 'Following' : 'Follow';
+                followButton.className = isFollowing ? 
+                    'px-4 py-1 border border-gray-300 rounded font-medium hover:bg-gray-50 transition' :
+                    'px-4 py-1 bg-insta-blue text-white rounded font-medium hover:bg-blue-600 transition';
+            } else {
+                followButton.style.display = 'none';
+            }
+            
+            // Render profile posts
+            const profilePostsGrid = document.getElementById('profilePostsGrid');
+            profilePostsGrid.innerHTML = '';
+            
+            user.posts.forEach(postId => {
+                const post = getPostById(postId);
+                if (post) {
+                    const postEl = document.createElement('div');
+                    postEl.className = 'aspect-square cursor-pointer relative group';
+                    postEl.innerHTML = `
+                        <img src="${post.imageUrl}" alt="Post" class="w-full h-full object-cover">
+                        <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition flex items-center justify-center opacity-0 group-hover:opacity-100">
+                            <div class="flex items-center space-x-4 text-white">
+                                <div class="flex items-center">
+                                    <i class="fas fa-heart mr-1"></i>
+                                    <span>${post.likes.length}</span>
+                                </div>
+                                <div class="flex items-center">
+                                    <i class="fas fa-comment mr-1"></i>
+                                    <span>${post.comments.length}</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    profilePostsGrid.appendChild(postEl);
+                }
+            });
+        }
+
+        function renderExplorePage() {
+            const explorePage = document.getElementById('explorePage');
+            if (!explorePage) return;
+            
+            const grid = explorePage.querySelector('.grid');
+            grid.innerHTML = '';
+            
+            // Show random posts from all users
+            const randomPosts = [...posts].sort(() => Math.random() - 0.5).slice(0, 9);
+            
+            randomPosts.forEach(post => {
+                const postEl = document.createElement('div');
+                postEl.className = 'aspect-square cursor-pointer relative group';
+                postEl.innerHTML = `
+                    <img src="${post.imageUrl}" alt="Explore post" class="w-full h-full object-cover">
+                    <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition"></div>
+                `;
+                grid.appendChild(postEl);
+            });
+        }
+
+        function renderNotifications() {
+            const notificationsList = document.getElementById('notificationsList');
+            if (!notificationsList) return;
+            
+            notificationsList.innerHTML = '';
+            
+            // Filter notifications for current user
+            const userNotifications = notifications.filter(n => n.userId === currentUser.id);
+            
+            if (userNotifications.length === 0) {
+                notificationsList.innerHTML = '<p class="text-gray-500 text-center py-8">No notifications yet</p>';
+                return;
+            }
+            
+            userNotifications.forEach(notification => {
+                const fromUser = getUserById(notification.fromUserId);
+                if (!fromUser) return;
+                
+                const notificationEl = document.createElement('div');
+                notificationEl.className = `flex items-center p-4 border-b ${notification.read ? 'bg-white' : 'bg-blue-50'}`;
+                
+                let message = '';
+                let icon = '';
+                
+                switch (notification.type) {
+                    case 'like':
+                        message = `liked your post`;
+                        icon = 'fas fa-heart text-red-500';
+                        break;
+                    case 'comment':
+                        message = `commented on your post`;
+                        icon = 'far fa-comment text-blue-500';
+                        break;
+                    case 'follow':
+                        message = `started following you`;
+                        icon = 'fas fa-user-plus text-green-500';
+                        break;
+                    default:
+                        message = `interacted with you`;
+                        icon = 'fas fa-bell text-yellow-500';
+                }
+                
+                notificationEl.innerHTML = `
+                    <div class="w-10 h-10 rounded-full overflow-hidden mr-3 flex-shrink-0">
+                        <img src="${fromUser.profilePic}" alt="${fromUser.username}" class="w-full h-full object-cover">
+                    </div>
+                    <div class="flex-1">
+                        <p class="text-sm">
+                            <span class="font-semibold">${fromUser.username}</span> ${message}
+                            <span class="text-gray-500 text-xs ml-2">${formatDate(notification.createdAt)}</span>
+                        </p>
+                    </div>
+                    <div class="ml-3">
+                        <i class="${icon}"></i>
+                    </div>
+                `;
+                
+                notificationsList.appendChild(notificationEl);
+            });
+        }
+
+        function toggleSave(postId) {
+            if (!currentUser) {
+                openAuthModal();
+                return;
+            }
+            
+            const saveIndex = currentUser.savedPosts.indexOf(postId);
+            
+            if (saveIndex === -1) {
+                currentUser.savedPosts.push(postId);
+                showToast('Post saved to collection', 'success');
+            } else {
+                currentUser.savedPosts.splice(saveIndex, 1);
+                showToast('Post removed from saved', 'info');
+            }
+            
+            updateUI();
+        }
+
+        function toggleComments(postId) {
+            // This would toggle showing all comments
+            showToast('Showing all comments', 'info');
+        }
+
+        function focusComment(postId) {
+            const commentInput = document.getElementById(`commentInput-${postId}`);
+            if (commentInput) {
+                commentInput.focus();
+            }
+        }
+
+        function toggleProfileMenu() {
+            const menu = document.getElementById('profileMenu');
+            menu.classList.toggle('hidden');
+        }
+
+        function switchProfileTab(tab) {
+            profileTab = tab;
+            const buttons = document.querySelectorAll('#profilePage button');
+            buttons.forEach(btn => {
+                if (btn.textContent.includes(tab.toUpperCase())) {
+                    btn.classList.add('border-black', 'border-t-2');
+                    btn.classList.remove('text-gray-500');
+                } else {
+                    btn.classList.remove('border-black', 'border-t-2');
+                    btn.classList.add('text-gray-500');
+                }
+            });
+            
+            // In a real app, you would load different content based on the tab
+            showToast(`Switched to ${tab} tab`, 'info');
+        }
+
+        function navigateTo(page) {
+            if (!currentUser && page !== 'home') {
+                openAuthModal();
+                return;
+            }
+            
+            currentPage = page;
+            
+            // Hide all pages
+            document.querySelectorAll('main > div[id$="Page"]').forEach(div => {
+                div.classList.add('hidden');
+            });
+            
+            // Show current page
+            if (page === 'home') {
+                document.querySelector('main').classList.remove('hidden');
+                document.getElementById('profilePage').classList.add('hidden');
+                document.getElementById('explorePage').classList.add('hidden');
+                document.getElementById('notificationsPage').classList.add('hidden');
+                document.getElementById('settingsPage').classList.add('hidden');
+            } else {
+                document.querySelector('main').classList.add('hidden');
+                document.getElementById(`${page}Page`).classList.remove('hidden');
+                
+                // Render specific page content
+                switch(page) {
+                    case 'profile':
+                        renderProfilePage();
+                        break;
+                    case 'explore':
+                        renderExplorePage();
+                        break;
+                    case 'notifications':
+                        renderNotifications();
+                        break;
+                    case 'settings':
+                        // Settings page is static
+                        break;
+                }
+            }
+            
+            // Close profile menu if open
+            document.getElementById('profileMenu').classList.add('hidden');
+            
+            // Update active state in navigation
+            updateNavigation();
+        }
+
+        function updateNavigation() {
+            // Update active states in navigation
+            const navButtons = document.querySelectorAll('nav button, .lg\\:hidden button');
+            navButtons.forEach(btn => {
+                btn.classList.remove('text-insta-pink');
+                btn.classList.add('text-gray-700');
+            });
+            
+            // Add active state to current page button
+            const activeButton = document.querySelector(`button[onclick*="${currentPage}"]`);
+            if (activeButton) {
+                activeButton.classList.remove('text-gray-700');
+                activeButton.classList.add('text-insta-pink');
+            }
+        }
+
+        function updateUI() {
+            // Update navigation profile picture
+            if (currentUser) {
+                document.getElementById('navProfilePic').src = currentUser.profilePic;
+                document.getElementById('currentUserProfilePic').src = currentUser.profilePic;
+                document.getElementById('currentUsername').textContent = currentUser.username;
+                document.getElementById('currentUserPosts').textContent = currentUser.posts.length;
+                document.getElementById('currentUserFollowers').textContent = currentUser.followers.length;
+                document.getElementById('currentUserFollowing').textContent = currentUser.following.length;
+                
+                // Show create post button
+                document.querySelectorAll('button[onclick*="openCreatePostModal"]').forEach(btn => {
+                    btn.style.display = 'block';
+                });
+            } else {
+                // Hide create post button if not logged in
+                document.querySelectorAll('button[onclick*="openCreatePostModal"]').forEach(btn => {
+                    btn.style.display = 'none';
+                });
+            }
+            
+            // Render content based on current page
+            renderStories();
+            renderFeed();
+            renderSuggestions();
+            
+            if (currentPage === 'profile') {
+                renderProfilePage();
+            } else if (currentPage === 'explore') {
+                renderExplorePage();
+            } else if (currentPage === 'notifications') {
+                renderNotifications();
+            }
+        }
+
+        function editProfile() {
+            showToast('Edit profile feature coming soon!', 'info');
+        }
+
+        function changePassword() {
+            showToast('Change password feature coming soon!', 'info');
+        }
+
+        function privacySettings() {
+            showToast('Privacy settings feature coming soon!', 'info');
+        }
+
+        function notificationSettings() {
+            showToast('Notification settings feature coming soon!', 'info');
+        }
+
+        function languageSettings() {
+            showToast('Language settings feature coming soon!', 'info');
+        }
+
+        function darkModeToggle() {
+            document.body.classList.toggle('bg-gray-900');
+            document.body.classList.toggle('text-white');
+            showToast('Dark mode toggled', 'info');
+        }
+
+        function showAbout() {
+            alert('InstaClone\n\nA fully functional Instagram clone with backend simulation.\n\nFeatures:\n• User authentication (Sign Up/Sign In)\n• Create, like, and comment on posts\n• Follow/unfollow users\n• Stories\n• Notifications\n• User profiles\n• Explore page\n• Responsive design\n\nDeveloped by Phumeh Mjoli © 2025');
+        }
+
+        function openMessageModal() {
+            showToast('Direct messaging feature coming soon!', 'info');
+        }
+
+        function openSettings() {
+            navigateTo('settings');
+        }
+
+        // ============================================
+        // EVENT LISTENERS
+        // ============================================
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize UI
+            updateUI();
+            
+            // Set up event listeners
+            document.getElementById('signinForm').addEventListener('submit', handleSignIn);
+            document.getElementById('signupForm').addEventListener('submit', handleSignUp);
+            document.getElementById('createPostForm').addEventListener('submit', handleCreatePost);
+            
+            // Search functionality
+            document.getElementById('searchInput').addEventListener('input', function(e) {
+                const searchTerm = e.target.value.toLowerCase();
+                if (searchTerm.length > 2) {
+                    showToast(`Searching for "${searchTerm}"`, 'info');
+                }
+            });
+            
+            // Close modals when clicking outside
+            window.addEventListener('click', function(e) {
+                const authModal = document.getElementById('authModal');
+                const createPostModal = document.getElementById('createPostModal');
+                const profileMenu = document.getElementById('profileMenu');
+                
+                if (authModal.classList.contains('active') && !authModal.querySelector('.modal-content').contains(e.target)) {
+                    closeAuthModal();
+                }
+                
+                if (createPostModal.classList.contains('active') && !createPostModal.querySelector('.modal-content').contains(e.target)) {
+                    closeCreatePostModal();
+                }
+                
+                if (!profileMenu.classList.contains('hidden') && !e.target.closest('.relative')) {
+                    profileMenu.classList.add('hidden');
+                }
+            });
+            
+            // Show welcome message
+            setTimeout(() => {
+                showToast('Welcome to InstaClone! Logged in as Phumeh Mjoli', 'success');
+            }, 1000);
+        });
+    </script>
+</body>
+</html>
