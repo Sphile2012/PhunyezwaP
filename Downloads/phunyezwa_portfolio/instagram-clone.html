@@ -1,0 +1,1746 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Instagram Clone - Phumeh Mjoli</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+        
+        body {
+            background-color: #fafafa;
+            color: #262626;
+            line-height: 1.5;
+        }
+        
+        .container {
+            max-width: 935px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        /* Header/Navbar */
+        .navbar {
+            border-bottom: 1px solid #dbdbdb;
+            background-color: #fff;
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+        }
+        
+        .nav-container {
+            max-width: 975px;
+            margin: 0 auto;
+            padding: 0 20px;
+            height: 60px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            font-family: 'Brush Script MT', cursive;
+            font-size: 28px;
+            font-weight: bold;
+            background: linear-gradient(45deg, #405de6, #5851db, #833ab4, #c13584, #e1306c, #fd1d1d);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            cursor: pointer;
+        }
+        
+        .search-box {
+            background: #efefef;
+            border-radius: 8px;
+            padding: 7px 15px;
+            width: 268px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .search-box input {
+            border: none;
+            background: transparent;
+            outline: none;
+            width: 100%;
+            font-size: 16px;
+        }
+        
+        .nav-icons {
+            display: flex;
+            gap: 22px;
+        }
+        
+        .nav-icons i {
+            font-size: 22px;
+            cursor: pointer;
+            color: #262626;
+            transition: color 0.2s;
+        }
+        
+        .nav-icons i:hover {
+            color: #8e8e8e;
+        }
+        
+        /* Profile Header */
+        .profile-header {
+            margin-top: 90px;
+            display: flex;
+            padding-bottom: 44px;
+            border-bottom: 1px solid #dbdbdb;
+        }
+        
+        .profile-photo {
+            flex: 0 0 290px;
+            text-align: center;
+            position: relative;
+        }
+        
+        .profile-img-container {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .profile-img {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid #e1306c;
+            padding: 3px;
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+        
+        .profile-img:hover {
+            transform: scale(1.05);
+        }
+        
+        .change-photo-btn {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            background: #0095f6;
+            color: white;
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            border: 2px solid white;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+        
+        .profile-info {
+            flex: 1;
+        }
+        
+        .profile-top {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .username {
+            font-size: 28px;
+            font-weight: 300;
+            margin-right: 20px;
+        }
+        
+        .btn {
+            padding: 7px 16px;
+            border: 1px solid #dbdbdb;
+            background: transparent;
+            border-radius: 4px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-right: 8px;
+            transition: background-color 0.2s;
+        }
+        
+        .btn-primary {
+            background-color: #0095f6;
+            color: white;
+            border: none;
+        }
+        
+        .btn-primary:hover {
+            background-color: #0081d6;
+        }
+        
+        .btn-outline {
+            background: transparent;
+        }
+        
+        .btn-outline:hover {
+            background-color: #f2f2f2;
+        }
+        
+        .btn-danger {
+            background-color: #ed4956;
+            color: white;
+            border: none;
+        }
+        
+        .btn-danger:hover {
+            background-color: #d83946;
+        }
+        
+        .stats {
+            display: flex;
+            margin-bottom: 20px;
+        }
+        
+        .stat {
+            margin-right: 40px;
+            font-size: 16px;
+        }
+        
+        .stat span {
+            font-weight: 600;
+        }
+        
+        .bio h2 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        
+        .bio p {
+            margin-bottom: 5px;
+        }
+        
+        .website {
+            color: #00376b;
+            font-weight: 600;
+            text-decoration: none;
+        }
+        
+        .website:hover {
+            text-decoration: underline;
+        }
+        
+        /* Tabs */
+        .profile-tabs {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+            border-top: 1px solid #dbdbdb;
+        }
+        
+        .tab {
+            display: flex;
+            align-items: center;
+            padding: 16px 0;
+            margin: 0 30px;
+            cursor: pointer;
+            color: #8e8e8e;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-top: 1px solid transparent;
+            margin-top: -1px;
+            transition: color 0.2s;
+        }
+        
+        .tab:hover {
+            color: #262626;
+        }
+        
+        .tab.active {
+            color: #262626;
+            border-top: 1px solid #262626;
+        }
+        
+        .tab i {
+            margin-right: 6px;
+            font-size: 12px;
+        }
+        
+        /* Posts Grid */
+        .posts-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 28px;
+            margin-top: 30px;
+            margin-bottom: 50px;
+        }
+        
+        .post {
+            position: relative;
+            aspect-ratio: 1;
+            overflow: hidden;
+            cursor: pointer;
+            border-radius: 3px;
+        }
+        
+        .post img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+        
+        .post:hover img {
+            transform: scale(1.05);
+        }
+        
+        .post-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .post:hover .post-overlay {
+            opacity: 1;
+        }
+        
+        .post-stats {
+            display: flex;
+            gap: 30px;
+        }
+        
+        .post-stat {
+            display: flex;
+            align-items: center;
+            font-weight: 600;
+        }
+        
+        .post-stat i {
+            margin-right: 7px;
+        }
+        
+        .post-actions {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            display: flex;
+            gap: 10px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .post:hover .post-actions {
+            opacity: 1;
+        }
+        
+        .post-action-btn {
+            background: rgba(0, 0, 0, 0.6);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .post-action-btn:hover {
+            background: rgba(0, 0, 0, 0.8);
+        }
+        
+        /* Add Post Button */
+        .add-post-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: #0095f6;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 24px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            z-index: 100;
+            transition: transform 0.2s, background-color 0.2s;
+        }
+        
+        .add-post-btn:hover {
+            transform: scale(1.1);
+            background-color: #0081d6;
+        }
+        
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 20px 0 40px;
+            color: #8e8e8e;
+            font-size: 12px;
+            border-top: 1px solid #dbdbdb;
+            margin-top: 20px;
+        }
+        
+        .footer a {
+            color: #8e8e8e;
+            text-decoration: none;
+            margin: 0 5px;
+        }
+        
+        .footer a:hover {
+            text-decoration: underline;
+        }
+        
+        .cloned-by {
+            font-weight: bold;
+            color: #e1306c;
+        }
+        
+        /* Modal for post view */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background-color: white;
+            max-width: 900px;
+            width: 90%;
+            max-height: 90%;
+            display: flex;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .modal-img {
+            flex: 1;
+            max-width: 60%;
+            background: #000;
+        }
+        
+        .modal-img img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+        
+        .modal-info {
+            flex: 1;
+            max-width: 40%;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .modal-header {
+            display: flex;
+            align-items: center;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #dbdbdb;
+            margin-bottom: 15px;
+        }
+        
+        .modal-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-right: 10px;
+        }
+        
+        .modal-username {
+            font-weight: 600;
+            flex: 1;
+        }
+        
+        .close-modal {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            color: white;
+            font-size: 30px;
+            cursor: pointer;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .close-modal:hover {
+            background: rgba(0, 0, 0, 0.7);
+        }
+        
+        .modal-comments {
+            flex: 1;
+            overflow-y: auto;
+            margin-bottom: 15px;
+            max-height: 400px;
+        }
+        
+        .comment {
+            display: flex;
+            margin-bottom: 15px;
+        }
+        
+        .comment-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-right: 10px;
+            flex-shrink: 0;
+        }
+        
+        .comment-content {
+            flex: 1;
+        }
+        
+        .comment-content h4 {
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 5px;
+            display: inline-block;
+        }
+        
+        .comment-content p {
+            font-size: 14px;
+            display: inline;
+        }
+        
+        .comment-delete {
+            color: #ed4956;
+            font-size: 12px;
+            cursor: pointer;
+            margin-left: 10px;
+            opacity: 0.7;
+        }
+        
+        .comment-delete:hover {
+            opacity: 1;
+        }
+        
+        .comment-input {
+            display: flex;
+            align-items: center;
+            margin-top: 10px;
+        }
+        
+        .comment-input input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #dbdbdb;
+            border-radius: 4px;
+            margin-right: 10px;
+        }
+        
+        .comment-input button {
+            padding: 10px 15px;
+            background: #0095f6;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        /* Upload Modal */
+        .upload-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .upload-content {
+            background-color: white;
+            max-width: 500px;
+            width: 90%;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        }
+        
+        .upload-header {
+            padding: 20px;
+            text-align: center;
+            border-bottom: 1px solid #dbdbdb;
+            font-weight: 600;
+            font-size: 18px;
+        }
+        
+        .upload-body {
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .upload-preview {
+            width: 200px;
+            height: 200px;
+            border-radius: 8px;
+            object-fit: cover;
+            margin: 0 auto 20px;
+            border: 2px dashed #dbdbdb;
+            display: none;
+        }
+        
+        .upload-icon {
+            font-size: 60px;
+            color: #0095f6;
+            margin-bottom: 20px;
+        }
+        
+        .upload-instructions {
+            margin-bottom: 20px;
+            color: #8e8e8e;
+        }
+        
+        .upload-btn {
+            padding: 10px 20px;
+            background: #efefef;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+        
+        .upload-btn:hover {
+            background: #dbdbdb;
+        }
+        
+        .upload-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        
+        /* Profile Pic Modal */
+        .profile-pic-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .profile-pic-content {
+            background-color: white;
+            max-width: 400px;
+            width: 90%;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        
+        .profile-pic-options {
+            display: flex;
+            flex-direction: column;
+            padding: 20px 0;
+        }
+        
+        .profile-pic-option {
+            padding: 18px 24px;
+            text-align: center;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+        
+        .profile-pic-option:hover {
+            background: #f2f2f2;
+        }
+        
+        .profile-pic-option.upload {
+            color: #0095f6;
+        }
+        
+        .profile-pic-option.remove {
+            color: #ed4956;
+        }
+        
+        .profile-pic-option.cancel {
+            border-top: 1px solid #dbdbdb;
+            color: #262626;
+        }
+        
+        /* Notification */
+        .notification {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            background: #0095f6;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 3000;
+            transform: translateX(150%);
+            transition: transform 0.3s ease;
+        }
+        
+        .notification.show {
+            transform: translateX(0);
+        }
+        
+        .notification.success {
+            background: #4caf50;
+        }
+        
+        .notification.error {
+            background: #ed4956;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .profile-header {
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+            }
+            
+            .profile-info {
+                width: 100%;
+            }
+            
+            .profile-top {
+                justify-content: center;
+            }
+            
+            .stats {
+                justify-content: center;
+            }
+            
+            .search-box {
+                display: none;
+            }
+            
+            .posts-grid {
+                gap: 3px;
+            }
+            
+            .modal-content {
+                flex-direction: column;
+                max-height: 80%;
+            }
+            
+            .modal-img, .modal-info {
+                max-width: 100%;
+            }
+            
+            .modal-img {
+                max-height: 40%;
+            }
+            
+            .add-post-btn {
+                bottom: 20px;
+                right: 20px;
+                width: 50px;
+                height: 50px;
+                font-size: 20px;
+            }
+        }
+        
+        /* Loading */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #0095f6;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo" onclick="refreshPage()">Instagram</div>
+            
+            <div class="search-box">
+                <i class="fas fa-search" style="color: #8e8e8e; margin-right: 10px;"></i>
+                <input type="text" placeholder="Search" id="searchInput">
+            </div>
+            
+            <div class="nav-icons">
+                <i class="fas fa-home" onclick="showNotification('Home clicked')"></i>
+                <i class="far fa-paper-plane" onclick="showNotification('Messages clicked')"></i>
+                <i class="far fa-compass" onclick="showNotification('Explore clicked')"></i>
+                <i class="far fa-heart" onclick="showNotification('Notifications clicked')"></i>
+                <i class="far fa-user" onclick="showNotification('Profile clicked')"></i>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- Main Content -->
+    <div class="container">
+        <!-- Profile Header -->
+        <div class="profile-header">
+            <div class="profile-photo">
+                <div class="profile-img-container">
+                    <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80" alt="Phumeh Mjoli" class="profile-img" id="profileImage">
+                    <div class="change-photo-btn" onclick="openProfilePicModal()">
+                        <i class="fas fa-camera"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="profile-info">
+                <div class="profile-top">
+                    <h1 class="username" id="username">phumehmjoli</h1>
+                    <button class="btn btn-primary" id="followBtn" onclick="toggleFollow()">Follow</button>
+                    <button class="btn btn-outline" onclick="showNotification('Message feature would open here')">Message</button>
+                    <button class="btn btn-outline" onclick="showNotification('More options')"><i class="fas fa-chevron-down"></i></button>
+                </div>
+                
+                <div class="stats">
+                    <div class="stat"><span id="postCount">9</span> posts</div>
+                    <div class="stat"><span id="followerCount">1,847</span> followers</div>
+                    <div class="stat"><span id="followingCount">956</span> following</div>
+                </div>
+                
+                <div class="bio">
+                    <h2 id="displayName">Phumeh Mjoli</h2>
+                    <p id="bioTitle">Full Stack Developer | UI/UX Designer</p>
+                    <p id="bioDescription">Creating beautiful and functional digital experiences</p>
+                    <p id="location">📍 Johannesburg, South Africa</p>
+                    <a href="https://phumehmjoli.com" class="website" target="_blank" id="website">phumehmjoli.com</a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Profile Tabs -->
+        <div class="profile-tabs">
+            <div class="tab active" onclick="switchTab('posts')">
+                <i class="fas fa-th"></i> Posts
+            </div>
+            <div class="tab" onclick="switchTab('saved')">
+                <i class="far fa-bookmark"></i> Saved
+            </div>
+            <div class="tab" onclick="switchTab('tagged')">
+                <i class="far fa-user"></i> Tagged
+            </div>
+        </div>
+        
+        <!-- Posts Grid -->
+        <div class="posts-grid" id="postsGrid">
+            <!-- Posts will be generated by JavaScript -->
+        </div>
+        
+        <!-- Saved Posts Grid (Hidden by default) -->
+        <div class="posts-grid" id="savedGrid" style="display: none;">
+            <!-- Saved posts will appear here -->
+        </div>
+        
+        <!-- Tagged Posts Grid (Hidden by default) -->
+        <div class="posts-grid" id="taggedGrid" style="display: none;">
+            <!-- Tagged posts will appear here -->
+        </div>
+    </div>
+    
+    <!-- Add Post Button -->
+    <div class="add-post-btn" onclick="openUploadModal()">
+        <i class="fas fa-plus"></i>
+    </div>
+    
+    <!-- Footer -->
+    <div class="footer">
+        <div>
+            <a href="#" onclick="showNotification('Meta info')">Meta</a> •
+            <a href="#" onclick="showNotification('About')">About</a> •
+            <a href="#" onclick="showNotification('Blog')">Blog</a> •
+            <a href="#" onclick="showNotification('Jobs')">Jobs</a> •
+            <a href="#" onclick="showNotification('Help')">Help</a> •
+            <a href="#" onclick="showNotification('API')">API</a> •
+            <a href="#" onclick="showNotification('Privacy')">Privacy</a> •
+            <a href="#" onclick="showNotification('Terms')">Terms</a> •
+            <a href="#" onclick="showNotification('Top Accounts')">Top Accounts</a> •
+            <a href="#" onclick="showNotification('Hashtags')">Hashtags</a> •
+            <a href="#" onclick="showNotification('Locations')">Locations</a> •
+            <a href="#" onclick="showNotification('Instagram Lite')">Instagram Lite</a>
+        </div>
+        <div style="margin-top: 10px;">
+            <a href="#" onclick="showNotification('Language selector')">English</a> • 
+            <span>© 2023 Instagram from Meta</span>
+        </div>
+        <div style="margin-top: 20px; font-size: 14px;">
+            Cloned by <span class="cloned-by">Phumeh Mjoli</span>
+        </div>
+    </div>
+    
+    <!-- Post Modal -->
+    <div class="modal" id="postModal">
+        <div class="close-modal" id="closeModal">&times;</div>
+        <div class="modal-content">
+            <div class="modal-img">
+                <img id="modalImage" src="" alt="Post Image">
+            </div>
+            <div class="modal-info">
+                <div class="modal-header">
+                    <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80" alt="Phumeh Mjoli" class="modal-avatar" id="modalAvatar">
+                    <div class="modal-username" id="modalUsername">phumehmjoli</div>
+                </div>
+                
+                <div class="modal-comments" id="modalComments">
+                    <!-- Comments will be added by JavaScript -->
+                </div>
+                
+                <div class="modal-actions">
+                    <div style="display: flex; gap: 15px; margin-bottom: 15px;">
+                        <i class="far fa-heart" style="font-size: 24px; cursor: pointer;" id="modalLikeBtn" onclick="toggleModalLike()"></i>
+                        <i class="far fa-comment" style="font-size: 24px; cursor: pointer;"></i>
+                        <i class="far fa-paper-plane" style="font-size: 24px; cursor: pointer;"></i>
+                    </div>
+                    <div style="font-weight: 600; margin-bottom: 10px;" id="likeCount">245 likes</div>
+                    <div style="font-size: 14px; color: #8e8e8e;" id="postDate">2 days ago</div>
+                    
+                    <div class="comment-input">
+                        <input type="text" placeholder="Add a comment..." id="commentInput">
+                        <button onclick="addComment()">Post</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Upload Modal -->
+    <div class="upload-modal" id="uploadModal">
+        <div class="upload-content">
+            <div class="upload-header">Create New Post</div>
+            <div class="upload-body">
+                <div class="upload-icon">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                </div>
+                <div class="upload-instructions">Drag photos and videos here or click to select</div>
+                <button class="upload-btn" onclick="document.getElementById('fileInput').click()">Select from computer</button>
+                <input type="file" id="fileInput" accept="image/*" style="display: none;" onchange="previewImage(event)">
+                
+                <img id="uploadPreview" class="upload-preview" alt="Preview">
+                
+                <div class="upload-actions">
+                    <button class="btn btn-outline" onclick="closeUploadModal()">Cancel</button>
+                    <button class="btn btn-primary" id="postButton" onclick="createNewPost()" disabled>Post</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Profile Picture Modal -->
+    <div class="profile-pic-modal" id="profilePicModal">
+        <div class="profile-pic-content">
+            <div class="profile-pic-options">
+                <div class="profile-pic-option upload" onclick="uploadNewProfilePic()">
+                    Upload Photo
+                </div>
+                <div class="profile-pic-option remove" onclick="removeProfilePic()">
+                    Remove Current Photo
+                </div>
+                <div class="profile-pic-option cancel" onclick="closeProfilePicModal()">
+                    Cancel
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Notification -->
+    <div class="notification" id="notification">
+        <i class="fas fa-check-circle"></i>
+        <span id="notificationText">Action completed successfully!</span>
+    </div>
+
+    <script>
+        // ============================
+        // APPLICATION STATE & DATA
+        // ============================
+        let appState = {
+            currentUser: {
+                username: "phumehmjoli",
+                displayName: "Phumeh Mjoli",
+                bioTitle: "Full Stack Developer | UI/UX Designer",
+                bioDescription: "Creating beautiful and functional digital experiences",
+                location: "Johannesburg, South Africa",
+                website: "https://phumehmjoli.com",
+                profilePic: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80",
+                followers: 1847,
+                following: 956,
+                isFollowing: false
+            },
+            posts: [
+                {
+                    id: 1,
+                    image: "https://images.unsplash.com/photo-1555099962-4199c345e5dd?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80",
+                    likes: 245,
+                    comments: [
+                        {id: 1, user: "phumehmjoli", text: "Beautiful sunset from my recent hike. Nature never fails to inspire! #hiking #nature #sunset"},
+                        {id: 2, user: "jane_doe", text: "Amazing shot! 👏"},
+                        {id: 3, user: "coder_girl", text: "Love the colors in this!"}
+                    ],
+                    date: "2 days ago",
+                    isLiked: false,
+                    isSaved: false
+                },
+                {
+                    id: 2,
+                    image: "https://images.unsplash.com/photo-1551650975-87deedd944c3?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1074&q=80",
+                    likes: 187,
+                    comments: [
+                        {id: 1, user: "phumehmjoli", text: "Working on a new web design project. Clean interfaces make me happy! #webdesign #uiux #developer"},
+                        {id: 2, user: "design_wizard", text: "This is fantastic work!"}
+                    ],
+                    date: "5 days ago",
+                    isLiked: true,
+                    isSaved: true
+                },
+                {
+                    id: 3,
+                    image: "https://images.unsplash.com/photo-1521737711867-e3b97375f902?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1074&q=80",
+                    likes: 312,
+                    comments: [
+                        {id: 1, user: "phumehmjoli", text: "Coffee and code - the perfect combination for a productive day. #coding #developerlife #coffee"},
+                        {id: 2, user: "tech_bro", text: "Where was this taken?"}
+                    ],
+                    date: "1 week ago",
+                    isLiked: false,
+                    isSaved: false
+                },
+                {
+                    id: 4,
+                    image: "https://images.unsplash.com/photo-1531297484001-80022131f5a1?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1120&q=80",
+                    likes: 421,
+                    comments: [
+                        {id: 1, user: "phumehmjoli", text: "Latest tech gadgets that are making my work easier. What's your favorite tool? #tech #gadgets #productivity"},
+                        {id: 2, user: "travel_bug", text: "Adding this to my bucket list!"}
+                    ],
+                    date: "1 week ago",
+                    isLiked: false,
+                    isSaved: true
+                },
+                {
+                    id: 5,
+                    image: "https://images.unsplash.com/photo-1545239351-ef35f43d514b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1074&q=80",
+                    likes: 156,
+                    comments: [
+                        {id: 1, user: "phumehmjoli", text: "Weekend vibes with a good book. Always learning something new! #reading #weekend #learning"}
+                    ],
+                    date: "2 weeks ago",
+                    isLiked: true,
+                    isSaved: false
+                },
+                {
+                    id: 6,
+                    image: "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1074&q=80",
+                    likes: 278,
+                    comments: [
+                        {id: 1, user: "phumehmjoli", text: "Exploring the city and finding hidden gems. Johannesburg has so much to offer! #johannesburg #explore #city"},
+                        {id: 2, user: "dev_life", text: "Great perspective!"}
+                    ],
+                    date: "2 weeks ago",
+                    isLiked: false,
+                    isSaved: false
+                },
+                {
+                    id: 7,
+                    image: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1074&q=80",
+                    likes: 198,
+                    comments: [
+                        {id: 1, user: "phumehmjoli", text: "Just launched a new project! So excited to share this with everyone. #webdevelopment #launch #project"}
+                    ],
+                    date: "3 weeks ago",
+                    isLiked: false,
+                    isSaved: true
+                },
+                {
+                    id: 8,
+                    image: "https://images.unsplash.com/photo-1579546929662-711aa81148cf?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80",
+                    likes: 345,
+                    comments: [
+                        {id: 1, user: "phumehmjoli", text: "Colorful gradients are my current design obsession. #design #gradients #colors"}
+                    ],
+                    date: "3 weeks ago",
+                    isLiked: true,
+                    isSaved: false
+                },
+                {
+                    id: 9,
+                    image: "https://images.unsplash.com/photo-1512486130939-2c4f79935e4f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1160&q=80",
+                    likes: 267,
+                    comments: [
+                        {id: 1, user: "phumehmjoli", text: "Late night coding session. Some of the best ideas come after midnight! #coder #nightowl #development"}
+                    ],
+                    date: "1 month ago",
+                    isLiked: false,
+                    isSaved: false
+                }
+            ],
+            savedPosts: [2, 4, 7], // IDs of saved posts
+            currentModalPostId: null,
+            currentTab: 'posts'
+        };
+
+        // ============================
+        // INITIALIZATION
+        // ============================
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeApp();
+        });
+
+        function initializeApp() {
+            renderPosts();
+            updateProfileInfo();
+            updateFollowButton();
+            updatePostCount();
+            renderSavedPosts();
+            renderTaggedPosts();
+        }
+
+        // ============================
+        // POST MANAGEMENT
+        // ============================
+        function renderPosts() {
+            const postsGrid = document.getElementById('postsGrid');
+            postsGrid.innerHTML = '';
+            
+            appState.posts.forEach(post => {
+                const postElement = createPostElement(post);
+                postsGrid.appendChild(postElement);
+            });
+        }
+
+        function createPostElement(post) {
+            const postElement = document.createElement('div');
+            postElement.className = 'post';
+            postElement.setAttribute('data-id', post.id);
+            
+            const isSaved = appState.savedPosts.includes(post.id);
+            const saveIconClass = isSaved ? 'fas fa-bookmark' : 'far fa-bookmark';
+            
+            postElement.innerHTML = `
+                <img src="${post.image}" alt="Post ${post.id}">
+                <div class="post-overlay">
+                    <div class="post-stats">
+                        <div class="post-stat">
+                            <i class="${post.isLiked ? 'fas' : 'far'} fa-heart"></i> ${post.likes}
+                        </div>
+                        <div class="post-stat">
+                            <i class="fas fa-comment"></i> ${post.comments.length}
+                        </div>
+                    </div>
+                </div>
+                <div class="post-actions">
+                    <button class="post-action-btn" onclick="toggleSavePost(${post.id}, event)">
+                        <i class="${saveIconClass}"></i>
+                    </button>
+                    <button class="post-action-btn" onclick="deletePost(${post.id}, event)">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            `;
+            
+            // Add click event to open modal
+            postElement.addEventListener('click', function(e) {
+                if (!e.target.closest('.post-action-btn')) {
+                    openModal(post.id);
+                }
+            });
+            
+            return postElement;
+        }
+
+        // ============================
+        // SAVED POSTS
+        // ============================
+        function renderSavedPosts() {
+            const savedGrid = document.getElementById('savedGrid');
+            savedGrid.innerHTML = '';
+            
+            const savedPostIds = appState.savedPosts;
+            const savedPosts = appState.posts.filter(post => savedPostIds.includes(post.id));
+            
+            if (savedPosts.length === 0) {
+                savedGrid.innerHTML = `
+                    <div style="grid-column: 1 / -1; text-align: center; padding: 50px; color: #8e8e8e;">
+                        <i class="far fa-bookmark" style="font-size: 60px; margin-bottom: 20px;"></i>
+                        <h3>No saved posts yet</h3>
+                        <p>Save photos and videos that you want to see again. Only you can see what you've saved.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            savedPosts.forEach(post => {
+                const postElement = createPostElement(post);
+                savedGrid.appendChild(postElement);
+            });
+        }
+
+        // ============================
+        // TAGGED POSTS
+        // ============================
+        function renderTaggedPosts() {
+            const taggedGrid = document.getElementById('taggedGrid');
+            taggedGrid.innerHTML = `
+                <div style="grid-column: 1 / -1; text-align: center; padding: 50px; color: #8e8e8e;">
+                    <i class="far fa-user" style="font-size: 60px; margin-bottom: 20px;"></i>
+                    <h3>No tagged posts yet</h3>
+                    <p>When people tag you in photos, they'll appear here.</p>
+                </div>
+            `;
+        }
+
+        // ============================
+        // POST ACTIONS
+        // ============================
+        function toggleSavePost(postId, event) {
+            if (event) event.stopPropagation();
+            
+            const index = appState.savedPosts.indexOf(postId);
+            const postElement = document.querySelector(`.post[data-id="${postId}"]`);
+            const saveIcon = postElement ? postElement.querySelector('.fa-bookmark') : null;
+            
+            if (index === -1) {
+                // Save the post
+                appState.savedPosts.push(postId);
+                if (saveIcon) {
+                    saveIcon.classList.remove('far');
+                    saveIcon.classList.add('fas');
+                }
+                showNotification('Post saved to your collection', 'success');
+            } else {
+                // Unsave the post
+                appState.savedPosts.splice(index, 1);
+                if (saveIcon) {
+                    saveIcon.classList.remove('fas');
+                    saveIcon.classList.add('far');
+                }
+                showNotification('Post removed from saved', 'success');
+            }
+            
+            // Update saved grid if we're on the saved tab
+            if (appState.currentTab === 'saved') {
+                renderSavedPosts();
+            }
+        }
+
+        function deletePost(postId, event) {
+            if (event) event.stopPropagation();
+            
+            if (confirm('Are you sure you want to delete this post?')) {
+                // Remove from posts array
+                const postIndex = appState.posts.findIndex(post => post.id === postId);
+                if (postIndex !== -1) {
+                    appState.posts.splice(postIndex, 1);
+                }
+                
+                // Remove from saved posts if present
+                const savedIndex = appState.savedPosts.indexOf(postId);
+                if (savedIndex !== -1) {
+                    appState.savedPosts.splice(savedIndex, 1);
+                }
+                
+                // Update UI
+                updatePostCount();
+                renderPosts();
+                
+                // Update saved posts if needed
+                if (appState.currentTab === 'saved') {
+                    renderSavedPosts();
+                }
+                
+                // Close modal if it's open for this post
+                if (appState.currentModalPostId === postId) {
+                    closeModal();
+                }
+                
+                showNotification('Post deleted successfully', 'success');
+            }
+        }
+
+        function createNewPost() {
+            const fileInput = document.getElementById('fileInput');
+            const preview = document.getElementById('uploadPreview');
+            
+            if (!fileInput.files[0]) {
+                showNotification('Please select an image first', 'error');
+                return;
+            }
+            
+            // In a real app, you would upload the image to a server
+            // For this demo, we'll use the preview as the image URL
+            const imageUrl = preview.src;
+            
+            // Create new post object
+            const newPost = {
+                id: Date.now(), // Unique ID based on timestamp
+                image: imageUrl,
+                likes: 0,
+                comments: [
+                    {id: 1, user: appState.currentUser.username, text: "New post! #instagramclone"}
+                ],
+                date: "Just now",
+                isLiked: false,
+                isSaved: false
+            };
+            
+            // Add to posts array
+            appState.posts.unshift(newPost);
+            
+            // Update UI
+            updatePostCount();
+            renderPosts();
+            closeUploadModal();
+            
+            // Switch to posts tab
+            switchTab('posts');
+            
+            showNotification('New post created successfully!', 'success');
+        }
+
+        // ============================
+        // PROFILE ACTIONS
+        // ============================
+        function toggleFollow() {
+            const followBtn = document.getElementById('followBtn');
+            const followerCount = document.getElementById('followerCount');
+            
+            if (appState.currentUser.isFollowing) {
+                // Unfollow
+                appState.currentUser.isFollowing = false;
+                appState.currentUser.followers--;
+                followBtn.textContent = 'Follow';
+                followBtn.className = 'btn btn-primary';
+                showNotification(`You unfollowed ${appState.currentUser.username}`);
+            } else {
+                // Follow
+                appState.currentUser.isFollowing = true;
+                appState.currentUser.followers++;
+                followBtn.textContent = 'Following';
+                followBtn.className = 'btn btn-outline';
+                showNotification(`You're now following ${appState.currentUser.username}`, 'success');
+            }
+            
+            // Update follower count display
+            followerCount.textContent = appState.currentUser.followers.toLocaleString();
+        }
+
+        function updateFollowButton() {
+            const followBtn = document.getElementById('followBtn');
+            if (appState.currentUser.isFollowing) {
+                followBtn.textContent = 'Following';
+                followBtn.className = 'btn btn-outline';
+            } else {
+                followBtn.textContent = 'Follow';
+                followBtn.className = 'btn btn-primary';
+            }
+        }
+
+        function uploadNewProfilePic() {
+            closeProfilePicModal();
+            
+            // Create a file input element
+            const fileInput = document.createElement('input');
+            fileInput.type = 'file';
+            fileInput.accept = 'image/*';
+            fileInput.style.display = 'none';
+            
+            fileInput.onchange = function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        // Update profile picture
+                        const profileImage = document.getElementById('profileImage');
+                        const modalAvatar = document.getElementById('modalAvatar');
+                        
+                        profileImage.src = event.target.result;
+                        modalAvatar.src = event.target.result;
+                        appState.currentUser.profilePic = event.target.result;
+                        
+                        showNotification('Profile picture updated successfully', 'success');
+                    };
+                    reader.readAsDataURL(file);
+                }
+            };
+            
+            document.body.appendChild(fileInput);
+            fileInput.click();
+            document.body.removeChild(fileInput);
+        }
+
+        function removeProfilePic() {
+            closeProfilePicModal();
+            
+            if (confirm('Remove your profile picture?')) {
+                // Set default profile picture
+                const defaultPic = "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png";
+                const profileImage = document.getElementById('profileImage');
+                const modalAvatar = document.getElementById('modalAvatar');
+                
+                profileImage.src = defaultPic;
+                modalAvatar.src = defaultPic;
+                appState.currentUser.profilePic = defaultPic;
+                
+                showNotification('Profile picture removed', 'success');
+            }
+        }
+
+        function updateProfileInfo() {
+            document.getElementById('username').textContent = appState.currentUser.username;
+            document.getElementById('displayName').textContent = appState.currentUser.displayName;
+            document.getElementById('bioTitle').textContent = appState.currentUser.bioTitle;
+            document.getElementById('bioDescription').textContent = appState.currentUser.bioDescription;
+            document.getElementById('location').textContent = appState.currentUser.location;
+            document.getElementById('website').textContent = appState.currentUser.website;
+            document.getElementById('website').href = appState.currentUser.website;
+            
+            document.getElementById('followerCount').textContent = appState.currentUser.followers.toLocaleString();
+            document.getElementById('followingCount').textContent = appState.currentUser.following.toLocaleString();
+            
+            // Update modal avatar
+            document.getElementById('modalAvatar').src = appState.currentUser.profilePic;
+            document.getElementById('modalUsername').textContent = appState.currentUser.username;
+        }
+
+        function updatePostCount() {
+            document.getElementById('postCount').textContent = appState.posts.length;
+        }
+
+        // ============================
+        // MODAL FUNCTIONS
+        // ============================
+        function openModal(postId) {
+            const post = appState.posts.find(p => p.id === postId);
+            if (!post) return;
+            
+            appState.currentModalPostId = postId;
+            
+            const modal = document.getElementById('postModal');
+            const modalImage = document.getElementById('modalImage');
+            const likeCount = document.getElementById('likeCount');
+            const postDate = document.getElementById('postDate');
+            const modalComments = document.getElementById('modalComments');
+            const modalLikeBtn = document.getElementById('modalLikeBtn');
+            
+            modalImage.src = post.image;
+            likeCount.textContent = `${post.likes} likes`;
+            postDate.textContent = post.date;
+            
+            // Update like button state
+            if (post.isLiked) {
+                modalLikeBtn.className = 'fas fa-heart';
+                modalLikeBtn.style.color = '#ed4956';
+            } else {
+                modalLikeBtn.className = 'far fa-heart';
+                modalLikeBtn.style.color = '';
+            }
+            
+            // Clear previous comments
+            modalComments.innerHTML = '';
+            
+            // Add comments
+            post.comments.forEach(comment => {
+                const commentElement = document.createElement('div');
+                commentElement.className = 'comment';
+                commentElement.innerHTML = `
+                    <img src="${appState.currentUser.profilePic}" alt="${comment.user}" class="comment-avatar">
+                    <div class="comment-content">
+                        <h4>${comment.user}</h4>
+                        <p>${comment.text}</p>
+                        ${comment.user === appState.currentUser.username ? 
+                          `<span class="comment-delete" onclick="deleteComment(${postId}, ${comment.id})">Delete</span>` : ''}
+                    </div>
+                `;
+                modalComments.appendChild(commentElement);
+            });
+            
+            modal.style.display = 'flex';
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('postModal');
+            modal.style.display = 'none';
+            appState.currentModalPostId = null;
+        }
+
+        function toggleModalLike() {
+            if (!appState.currentModalPostId) return;
+            
+            const post = appState.posts.find(p => p.id === appState.currentModalPostId);
+            if (!post) return;
+            
+            const modalLikeBtn = document.getElementById('modalLikeBtn');
+            const likeCount = document.getElementById('likeCount');
+            
+            if (post.isLiked) {
+                // Unlike
+                post.isLiked = false;
+                post.likes--;
+                modalLikeBtn.className = 'far fa-heart';
+                modalLikeBtn.style.color = '';
+            } else {
+                // Like
+                post.isLiked = true;
+                post.likes++;
+                modalLikeBtn.className = 'fas fa-heart';
+                modalLikeBtn.style.color = '#ed4956';
+            }
+            
+            // Update like count
+            likeCount.textContent = `${post.likes} likes`;
+            
+            // Update the post in the grid
+            const postElement = document.querySelector(`.post[data-id="${post.id}"]`);
+            if (postElement) {
+                const likeIcon = postElement.querySelector('.fa-heart');
+                const likeCountElement = postElement.querySelector('.post-stat:first-child');
+                
+                if (post.isLiked) {
+                    likeIcon.classList.remove('far');
+                    likeIcon.classList.add('fas');
+                } else {
+                    likeIcon.classList.remove('fas');
+                    likeIcon.classList.add('far');
+                }
+                
+                likeCountElement.innerHTML = `<i class="${post.isLiked ? 'fas' : 'far'} fa-heart"></i> ${post.likes}`;
+            }
+        }
+
+        function addComment() {
+            if (!appState.currentModalPostId) return;
+            
+            const commentInput = document.getElementById('commentInput');
+            const commentText = commentInput.value.trim();
+            
+            if (!commentText) {
+                showNotification('Please enter a comment', 'error');
+                return;
+            }
+            
+            const post = appState.posts.find(p => p.id === appState.currentModalPostId);
+            if (!post) return;
+            
+            // Add new comment
+            const newComment = {
+                id: Date.now(),
+                user: appState.currentUser.username,
+                text: commentText
+            };
+            
+            post.comments.push(newComment);
+            
+            // Update modal
+            const modalComments = document.getElementById('modalComments');
+            const commentElement = document.createElement('div');
+            commentElement.className = 'comment';
+            commentElement.innerHTML = `
+                <img src="${appState.currentUser.profilePic}" alt="${newComment.user}" class="comment-avatar">
+                <div class="comment-content">
+                    <h4>${newComment.user}</h4>
+                    <p>${newComment.text}</p>
+                    <span class="comment-delete" onclick="deleteComment(${post.id}, ${newComment.id})">Delete</span>
+                </div>
+            `;
+            modalComments.appendChild(commentElement);
+            
+            // Clear input
+            commentInput.value = '';
+            
+            // Update comment count in grid
+            const postElement = document.querySelector(`.post[data-id="${post.id}"]`);
+            if (postElement) {
+                const commentCountElement = postElement.querySelector('.post-stat:last-child');
+                commentCountElement.innerHTML = `<i class="fas fa-comment"></i> ${post.comments.length}`;
+            }
+            
+            showNotification('Comment added', 'success');
+        }
+
+        function deleteComment(postId, commentId) {
+            const post = appState.posts.find(p => p.id === postId);
+            if (!post) return;
+            
+            const commentIndex = post.comments.findIndex(c => c.id === commentId);
+            if (commentIndex === -1) return;
+            
+            post.comments.splice(commentIndex, 1);
+            
+            // If modal is open for this post, refresh comments
+            if (appState.currentModalPostId === postId) {
+                openModal(postId);
+            }
+            
+            showNotification('Comment deleted', 'success');
+        }
+
+        // ============================
+        // UPLOAD MODAL FUNCTIONS
+        // ============================
+        function openUploadModal() {
+            document.getElementById('uploadModal').style.display = 'flex';
+            document.getElementById('postButton').disabled = true;
+            document.getElementById('uploadPreview').style.display = 'none';
+            document.getElementById('fileInput').value = '';
+        }
+
+        function closeUploadModal() {
+            document.getElementById('uploadModal').style.display = 'none';
+        }
+
+        function previewImage(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const preview = document.getElementById('uploadPreview');
+                preview.src = e.target.result;
+                preview.style.display = 'block';
+                document.getElementById('postButton').disabled = false;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // ============================
+        // PROFILE PIC MODAL FUNCTIONS
+        // ============================
+        function openProfilePicModal() {
+            document.getElementById('profilePicModal').style.display = 'flex';
+        }
+
+        function closeProfilePicModal() {
+            document.getElementById('profilePicModal').style.display = 'none';
+        }
+
+        // ============================
+        // TAB SWITCHING
+        // ============================
+        function switchTab(tabName) {
+            appState.currentTab = tabName;
+            
+            // Update active tab UI
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            if (tabName === 'posts') {
+                document.querySelector('.tab:nth-child(1)').classList.add('active');
+                document.getElementById('postsGrid').style.display = 'grid';
+                document.getElementById('savedGrid').style.display = 'none';
+                document.getElementById('taggedGrid').style.display = 'none';
+            } else if (tabName === 'saved') {
+                document.querySelector('.tab:nth-child(2)').classList.add('active');
+                document.getElementById('postsGrid').style.display = 'none';
+                document.getElementById('savedGrid').style.display = 'grid';
+                document.getElementById('taggedGrid').style.display = 'none';
+            } else if (tabName === 'tagged') {
+                document.querySelector('.tab:nth-child(3)').classList.add('active');
+                document.getElementById('postsGrid').style.display = 'none';
+                document.getElementById('savedGrid').style.display = 'none';
+                document.getElementById('taggedGrid').style.display = 'grid';
+            }
+        }
+
+        // ============================
+        // UTILITY FUNCTIONS
+        // ============================
+        function showNotification(message, type = 'info') {
+            const notification = document.getElementById('notification');
+            const notificationText = document.getElementById('notificationText');
+            
+            notificationText.textContent = message;
+            notification.className = 'notification';
+            notification.classList.add(type);
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+
+        function refreshPage() {
+            location.reload();
+        }
+
+        // ============================
+        // EVENT LISTENERS
+        // ============================
+        document.getElementById('closeModal').addEventListener('click', closeModal);
+        
+        // Close modals when clicking outside
+        window.addEventListener('click', function(event) {
+            const postModal = document.getElementById('postModal');
+            const uploadModal = document.getElementById('uploadModal');
+            const profilePicModal = document.getElementById('profilePicModal');
+            
+            if (event.target === postModal) {
+                closeModal();
+            }
+            
+            if (event.target === uploadModal) {
+                closeUploadModal();
+            }
+            
+            if (event.target === profilePicModal) {
+                closeProfilePicModal();
+            }
+        });
+
+        // Search functionality
+        document.getElementById('searchInput').addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            if (searchTerm.length > 0) {
+                showNotification(`Searching for: ${searchTerm}`);
+            }
+        });
+    </script>
+</body>
+</html>
