@@ -1,58 +1,10 @@
-# Project Build Guide
+## NotePad
 
-## Tech Stack
+This app was created using https://getmocha.com.
+Need help or want to join the community? Join our [Discord](https://discord.gg/shDEGBSe2d).
 
-This project is built using the following technologies:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## Prerequisites
-
-Make sure your system has Node.js and npm installed.
-
-We recommend using nvm to install Node.js: [nvm Installation Guide](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-## Install Dependencies
-
-```sh
+To run the devserver:
+```
 npm install
-```
-
-## Development Server
-
-Start the development server with hot reload and instant preview:
-
-```sh
 npm run dev
-```
-
-## Build Project
-
-Build for production:
-
-```sh
-npm run build
-```
-
-## Preview Build
-
-Preview the built project:
-
-```sh
-npm run preview
-```
-
-## Project Structure
-
-```
-src/
-├── components/     # UI Components
-├── pages/         # Page Components
-├── hooks/         # Custom Hooks
-├── lib/           # Utility Library
-└── main.tsx       # Application Entry Point
 ```
