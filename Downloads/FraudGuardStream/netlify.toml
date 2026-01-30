@@ -1,0 +1,24 @@
+# Netlify configuration for Instagram Clone
+# Created by Phumeh
+
+[build]
+  publish = "frontend/build"
+  command = "cd frontend && npm install && npm run build && cd ../netlify/functions && npm install"
+
+[build.environment]
+  NODE_VERSION = "18"
+  CI = "false"
+
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"
+
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/api/:splat"
+  status = 200
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
