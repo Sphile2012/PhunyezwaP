@@ -1,22 +1,19 @@
 /*
- * Instagram Clone - Database Configuration
+ * Instagram Clone - SQLite Database Configuration
  * Created by Phumeh
  */
 
-const mongoose = require('mongoose');
+const { Sequelize } = require('sequelize');
+const path = require('path');
 
-const connectDB = async () => {
-  try {
-    const conn = await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/instagram-clone', {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
-    console.log(`🚀 MongoDB Connected: ${conn.connection.host}`);
-    return conn;
-  } catch (error) {
-    console.error(`❌ MongoDB connection error: ${error.message}`);
-    process.exit(1);
+const sequelize = new Sequelize({
+  dialect: 'sqlite',
+  storage: process.env.DATABASE_PATH || path.join(__dirname, '../database.sqlite'),
+  logging: process.env.NODE_ENV === 'development' ? console.log : false,
+  define: {
+    timestamps: true,
+    underscored: false
   }
-};
+});
 
-module.exports = connectDB;
+module.exports = sequelize;

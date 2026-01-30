@@ -1,36 +1,55 @@
 /*
- * Instagram Clone - Collection Model (Saved Posts)
+ * Instagram Clone - Collection Model (Sequelize)
  * Created by Phumeh
  */
 
-const mongoose = require('mongoose');
+const { DataTypes } = require('sequelize');
+const sequelize = require('../config/database');
 
-const collectionSchema = new mongoose.Schema({
-  user: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true
+const Collection = sequelize.define('Collection', {
+  id: {
+    type: DataTypes.INTEGER,
+    primaryKey: true,
+    autoIncrement: true
+  },
+  userId: {
+    type: DataTypes.INTEGER,
+    allowNull: false
   },
   name: {
-    type: String,
-    required: true,
-    maxlength: 50
+    type: DataTypes.STRING(50),
+    allowNull: false
   },
-  coverImage: String,
-  posts: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Post'
-  }],
-  reels: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Reel'
-  }],
+  coverImage: {
+    type: DataTypes.STRING,
+    allowNull: true
+  },
   isPrivate: {
-    type: Boolean,
-    default: true
+    type: DataTypes.BOOLEAN,
+    defaultValue: true
   }
 }, {
+  tableName: 'collections',
   timestamps: true
 });
 
-module.exports = mongoose.model('Collection', collectionSchema);
+const CollectionPost = sequelize.define('CollectionPost', {
+  id: {
+    type: DataTypes.INTEGER,
+    primaryKey: true,
+    autoIncrement: true
+  },
+  collectionId: {
+    type: DataTypes.INTEGER,
+    allowNull: false
+  },
+  postId: {
+    type: DataTypes.INTEGER,
+    allowNull: false
+  }
+}, {
+  tableName: 'collection_posts',
+  timestamps: true
+});
+
+module.exports = { Collection, CollectionPost };

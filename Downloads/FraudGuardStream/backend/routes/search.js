@@ -4,8 +4,8 @@
  */
 
 const express = require('express');
-const User = require('../models/User');
-const Post = require('../models/Post');
+const { User, Post } = require('../models');
+const { Op } = require('sequelize');
 const auth = require('../middleware/auth');
 
 const router = express.Router();
@@ -21,21 +21,19 @@ router.get('/users', auth, async (req, res) => {
 
     const searchQuery = q.trim();
     
-    const users = await User.find({
-      $and: [
-        { _id: { $ne: req.user._id } }, // Exclude current user
-        { isActive: true },
-        {
-          $or: [
-            { username: { $regex: searchQuery, $options: 'i' } },
-            { fullName: { $regex: searchQuery, $options: 'i' } }
-          ]
-        }
-      ]
-    })
-    .select('username fullName profilePicture isVerified isPrivate')
-    .limit(parseInt(limit))
-    .sort({ isVerified: -1, username: 1 });
+    const users = await User.findAll({
+      where: {
+        id: { [Op.ne]: req.user.id },
+        isActive: true,
+        [Op.or]: [
+          { username: { [Op.like]: `%${searchQuery}%` } },
+          { fullName: { [Op.like]: `%${searchQuery}%` } }
+        ]
+      },
+      attributes: ['id', 'username', 'fullName', 'profilePicture', 'isVerified', 'isPrivate'],
+      limit: parseInt(limit),
+      order: [['isVerified', 'DESC'], ['username', 'ASC']]
+    });
 
     res.json(users);
   } catch (error) {
@@ -54,28 +52,41 @@ router.get('/hashtags', auth, async (req, res) => {
     }
 
     const searchQuery = q.trim().replace('#', '');
+    const { sequelize } = require('../models');
     
-    // Aggregate hashtags from posts
-    const hashtags = await Post.aggregate([
-      { $match: { hashtags: { $regex: searchQuery, $options: 'i' } } },
-      { $unwind: '$hashtags' },
-      { $match: { hashtags: { $regex: searchQuery, $options: 'i' } } },
-      {
-        $group: {
-          _id: '$hashtags',
-          count: { $sum: 1 },
-          recentPost: { $first: '$media' }
-        }
+    // Get posts with matching hashtags
+    const posts = await Post.findAll({
+      where: {
+        hashtags: { [Op.like]: `%${searchQuery}%` }
       },
-      { $sort: { count: -1 } },
-      { $limit: parseInt(limit) }
-    ]);
+      attributes: ['hashtags', 'media'],
+      limit: 100
+    });
 
-    const formattedHashtags = hashtags.map(tag => ({
-      hashtag: tag._id,
-      postCount: tag.count,
-      thumbnail: tag.recentPost?.[0]?.url || null
-    }));
+    // Aggregate hashtags manually
+    const hashtagCounts = {};
+    const hashtagThumbnails = {};
+    
+    posts.forEach(post => {
+      const hashtags = post.hashtags || [];
+      hashtags.forEach(tag => {
+        if (tag.toLowerCase().includes(searchQuery.toLowerCase())) {
+          hashtagCounts[tag] = (hashtagCounts[tag] || 0) + 1;
+          if (!hashtagThumbnails[tag] && post.media && post.media[0]) {
+            hashtagThumbnails[tag] = post.media[0].url;
+          }
+        }
+      });
+    });
+
+    const formattedHashtags = Object.entries(hashtagCounts)
+      .map(([hashtag, count]) => ({
+        hashtag,
+        postCount: count,
+        thumbnail: hashtagThumbnails[hashtag] || null
+      }))
+      .sort((a, b) => b.postCount - a.postCount)
+      .slice(0, parseInt(limit));
 
     res.json(formattedHashtags);
   } catch (error) {
@@ -95,27 +106,45 @@ router.get('/locations', auth, async (req, res) => {
 
     const searchQuery = q.trim();
     
-    // Aggregate locations from posts
-    const locations = await Post.aggregate([
-      { $match: { 'location.name': { $regex: searchQuery, $options: 'i' } } },
-      {
-        $group: {
-          _id: '$location.name',
-          coordinates: { $first: '$location.coordinates' },
-          count: { $sum: 1 },
-          recentPost: { $first: '$media' }
-        }
+    // Get posts with matching location
+    const posts = await Post.findAll({
+      where: {
+        locationName: { [Op.like]: `%${searchQuery}%` }
       },
-      { $sort: { count: -1 } },
-      { $limit: parseInt(limit) }
-    ]);
+      attributes: ['locationName', 'locationCoordinates', 'media'],
+      limit: 100
+    });
 
-    const formattedLocations = locations.map(location => ({
-      name: location._id,
-      coordinates: location.coordinates,
-      postCount: location.count,
-      thumbnail: location.recentPost?.[0]?.url || null
-    }));
+    // Aggregate locations manually
+    const locationData = {};
+    
+    posts.forEach(post => {
+      const name = post.locationName;
+      if (name) {
+        if (!locationData[name]) {
+          locationData[name] = {
+            name,
+            coordinates: post.locationCoordinates,
+            count: 0,
+            thumbnail: null
+          };
+        }
+        locationData[name].count++;
+        if (!locationData[name].thumbnail && post.media && post.media[0]) {
+          locationData[name].thumbnail = post.media[0].url;
+        }
+      }
+    });
+
+    const formattedLocations = Object.values(locationData)
+      .map(location => ({
+        name: location.name,
+        coordinates: location.coordinates,
+        postCount: location.count,
+        thumbnail: location.thumbnail
+      }))
+      .sort((a, b) => b.postCount - a.postCount)
+      .slice(0, parseInt(limit));
 
     res.json(formattedLocations);
   } catch (error) {
@@ -127,44 +156,57 @@ router.get('/locations', auth, async (req, res) => {
 // Get trending searches
 router.get('/trending', auth, async (req, res) => {
   try {
-    // Get trending hashtags
-    const trendingHashtags = await Post.aggregate([
-      { $match: { createdAt: { $gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) } } },
-      { $unwind: '$hashtags' },
-      {
-        $group: {
-          _id: '$hashtags',
-          count: { $sum: 1 },
-          recentPost: { $first: '$media' }
-        }
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    
+    // Get recent posts with hashtags
+    const posts = await Post.findAll({
+      where: {
+        createdAt: { [Op.gte]: sevenDaysAgo }
       },
-      { $sort: { count: -1 } },
-      { $limit: 10 }
-    ]);
+      attributes: ['hashtags', 'media'],
+      limit: 500
+    });
+
+    // Aggregate hashtags
+    const hashtagCounts = {};
+    const hashtagThumbnails = {};
+    
+    posts.forEach(post => {
+      const hashtags = post.hashtags || [];
+      hashtags.forEach(tag => {
+        hashtagCounts[tag] = (hashtagCounts[tag] || 0) + 1;
+        if (!hashtagThumbnails[tag] && post.media && post.media[0]) {
+          hashtagThumbnails[tag] = post.media[0].url;
+        }
+      });
+    });
+
+    const trendingHashtags = Object.entries(hashtagCounts)
+      .map(([hashtag, count]) => ({
+        hashtag,
+        postCount: count,
+        thumbnail: hashtagThumbnails[hashtag] || null
+      }))
+      .sort((a, b) => b.postCount - a.postCount)
+      .slice(0, 10);
 
     // Get suggested users (verified or popular)
-    const suggestedUsers = await User.find({
-      $and: [
-        { _id: { $ne: req.user._id } },
-        { isActive: true },
-        {
-          $or: [
-            { isVerified: true },
-            { 'followers.10': { $exists: true } } // Users with at least 10 followers
-          ]
-        }
-      ]
-    })
-    .select('username fullName profilePicture isVerified')
-    .limit(5)
-    .sort({ isVerified: -1, followers: -1 });
+    const suggestedUsers = await User.findAll({
+      where: {
+        id: { [Op.ne]: req.user.id },
+        isActive: true,
+        [Op.or]: [
+          { isVerified: true },
+          { followersCount: { [Op.gte]: 10 } }
+        ]
+      },
+      attributes: ['id', 'username', 'fullName', 'profilePicture', 'isVerified'],
+      limit: 5,
+      order: [['isVerified', 'DESC'], ['followersCount', 'DESC']]
+    });
 
     res.json({
-      trendingHashtags: trendingHashtags.map(tag => ({
-        hashtag: tag._id,
-        postCount: tag.count,
-        thumbnail: tag.recentPost?.[0]?.url || null
-      })),
+      trendingHashtags,
       suggestedUsers
     });
   } catch (error) {
@@ -176,8 +218,10 @@ router.get('/trending', auth, async (req, res) => {
 // Get recent searches
 router.get('/recent', auth, async (req, res) => {
   try {
-    const user = await User.findById(req.user._id).select('recentSearches');
-    res.json(user.recentSearches || []);
+    const user = await User.findByPk(req.user.id, {
+      attributes: ['recentSearches']
+    });
+    res.json(user?.recentSearches || []);
   } catch (error) {
     console.error('Get recent searches error:', error);
     res.status(500).json({ message: 'Server error' });
@@ -187,21 +231,19 @@ router.get('/recent', auth, async (req, res) => {
 // Add to recent searches
 router.post('/recent', auth, async (req, res) => {
   try {
-    const { type, query, userId } = req.body; // type: 'user', 'hashtag', 'location'
+    const { type, query, userId } = req.body;
     
-    const user = await User.findById(req.user._id);
+    const user = await User.findByPk(req.user.id);
     
-    if (!user.recentSearches) {
-      user.recentSearches = [];
-    }
+    let recentSearches = user.recentSearches || [];
 
     // Remove if already exists
-    user.recentSearches = user.recentSearches.filter(
+    recentSearches = recentSearches.filter(
       search => !(search.type === type && search.query === query)
     );
 
     // Add to beginning
-    user.recentSearches.unshift({
+    recentSearches.unshift({
       type,
       query,
       userId: userId || null,
@@ -209,9 +251,9 @@ router.post('/recent', auth, async (req, res) => {
     });
 
     // Keep only last 20 searches
-    user.recentSearches = user.recentSearches.slice(0, 20);
+    recentSearches = recentSearches.slice(0, 20);
 
-    await user.save();
+    await user.update({ recentSearches });
     res.json({ message: 'Added to recent searches' });
   } catch (error) {
     console.error('Add recent search error:', error);
@@ -222,7 +264,10 @@ router.post('/recent', auth, async (req, res) => {
 // Clear recent searches
 router.delete('/recent', auth, async (req, res) => {
   try {
-    await User.findByIdAndUpdate(req.user._id, { recentSearches: [] });
+    await User.update(
+      { recentSearches: [] },
+      { where: { id: req.user.id } }
+    );
     res.json({ message: 'Recent searches cleared' });
   } catch (error) {
     console.error('Clear recent searches error:', error);

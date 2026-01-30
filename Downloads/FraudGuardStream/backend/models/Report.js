@@ -1,62 +1,64 @@
 /*
- * Instagram Clone - Report Model
+ * Instagram Clone - Report Model (Sequelize)
  * Created by Phumeh
  */
 
-const mongoose = require('mongoose');
+const { DataTypes } = require('sequelize');
+const sequelize = require('../config/database');
 
-const reportSchema = new mongoose.Schema({
-  reporter: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true
+const Report = sequelize.define('Report', {
+  id: {
+    type: DataTypes.INTEGER,
+    primaryKey: true,
+    autoIncrement: true
   },
-  reportType: {
-    type: String,
-    enum: ['user', 'post', 'reel', 'story', 'comment', 'message'],
-    required: true
+  reporterId: {
+    type: DataTypes.INTEGER,
+    allowNull: false
   },
-  reportedItem: {
-    type: mongoose.Schema.Types.ObjectId,
-    required: true,
-    refPath: 'reportType'
+  reportedUserId: {
+    type: DataTypes.INTEGER,
+    allowNull: true
   },
-  reportedUser: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
+  postId: {
+    type: DataTypes.INTEGER,
+    allowNull: true
+  },
+  reelId: {
+    type: DataTypes.INTEGER,
+    allowNull: true
+  },
+  storyId: {
+    type: DataTypes.INTEGER,
+    allowNull: true
+  },
+  commentId: {
+    type: DataTypes.INTEGER,
+    allowNull: true
+  },
+  messageId: {
+    type: DataTypes.INTEGER,
+    allowNull: true
   },
   reason: {
-    type: String,
-    enum: [
-      'spam',
-      'nudity',
-      'hate_speech',
-      'violence',
-      'harassment',
-      'false_information',
-      'scam',
-      'intellectual_property',
-      'self_harm',
-      'other'
-    ],
-    required: true
+    type: DataTypes.ENUM('spam', 'harassment', 'hate_speech', 'violence', 'nudity', 'false_information', 'scam', 'self_harm', 'other'),
+    allowNull: false
   },
   description: {
-    type: String,
-    maxlength: 500
+    type: DataTypes.STRING(500),
+    allowNull: true
   },
   status: {
-    type: String,
-    enum: ['pending', 'reviewed', 'action_taken', 'dismissed'],
-    default: 'pending'
+    type: DataTypes.ENUM('pending', 'reviewing', 'resolved', 'dismissed'),
+    defaultValue: 'pending'
   },
-  reviewedAt: Date,
-  reviewedBy: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
+  resolution: {
+    type: DataTypes.STRING,
+    allowNull: true
   }
 }, {
+  tableName: 'reports',
   timestamps: true
 });
 
-module.exports = mongoose.model('Report', reportSchema);
+module.exports = Report;

@@ -1,169 +1,133 @@
 /*
- * Instagram Clone - Message Model
- * Cloned by Phumeh
+ * Instagram Clone - Message & Conversation Models (Sequelize)
+ * Created by Phumeh
  */
 
-const mongoose = require('mongoose');
+const { DataTypes } = require('sequelize');
+const sequelize = require('../config/database');
 
-const conversationSchema = new mongoose.Schema({
-  participants: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true
-  }],
+const Conversation = sequelize.define('Conversation', {
+  id: {
+    type: DataTypes.INTEGER,
+    primaryKey: true,
+    autoIncrement: true
+  },
   isGroup: {
-    type: Boolean,
-    default: false
+    type: DataTypes.BOOLEAN,
+    defaultValue: false
   },
   groupName: {
-    type: String,
-    maxlength: 50
+    type: DataTypes.STRING(50),
+    allowNull: true
   },
-  groupImage: String,
-  admins: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
-  }],
-  lastMessage: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Message'
+  groupImage: {
+    type: DataTypes.STRING,
+    allowNull: true
   },
-  mutedBy: [{
-    user: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User'
-    },
-    mutedUntil: Date
-  }],
-  archivedBy: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
-  }],
-  deletedBy: [{
-    user: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User'
-    },
-    deletedAt: {
-      type: Date,
-      default: Date.now
-    }
-  }]
+  lastMessageId: {
+    type: DataTypes.INTEGER,
+    allowNull: true
+  }
 }, {
+  tableName: 'conversations',
   timestamps: true
 });
 
-const messageSchema = new mongoose.Schema({
-  conversation: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Conversation',
-    required: true
+const ConversationParticipant = sequelize.define('ConversationParticipant', {
+  id: {
+    type: DataTypes.INTEGER,
+    primaryKey: true,
+    autoIncrement: true
   },
-  sender: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true
+  conversationId: {
+    type: DataTypes.INTEGER,
+    allowNull: false
+  },
+  userId: {
+    type: DataTypes.INTEGER,
+    allowNull: false
+  },
+  isAdmin: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false
+  },
+  isMuted: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false
+  },
+  isArchived: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false
+  }
+}, {
+  tableName: 'conversation_participants',
+  timestamps: true
+});
+
+const Message = sequelize.define('Message', {
+  id: {
+    type: DataTypes.INTEGER,
+    primaryKey: true,
+    autoIncrement: true
+  },
+  conversationId: {
+    type: DataTypes.INTEGER,
+    allowNull: false
+  },
+  senderId: {
+    type: DataTypes.INTEGER,
+    allowNull: false
   },
   type: {
-    type: String,
-    enum: ['text', 'image', 'video', 'voice', 'gif', 'sticker', 'post', 'reel', 'story', 'location', 'contact'],
-    required: true
+    type: DataTypes.ENUM('text', 'image', 'video', 'voice', 'gif', 'sticker', 'post', 'reel', 'story', 'location', 'contact'),
+    defaultValue: 'text'
   },
   content: {
-    text: String,
-    media: {
-      url: String,
-      thumbnail: String,
-      duration: Number
-    },
-    post: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Post'
-    },
-    reel: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Reel'
-    },
-    story: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Story'
-    },
-    location: {
-      name: String,
-      coordinates: {
-        latitude: Number,
-        longitude: Number
-      }
-    },
-    contact: {
-      name: String,
-      phone: String
-    },
-    sticker: {
-      id: String,
-      url: String
-    }
+    type: DataTypes.JSON,
+    defaultValue: {}
   },
-  reactions: [{
-    user: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User'
-    },
-    emoji: String,
-    createdAt: {
-      type: Date,
-      default: Date.now
-    }
-  }],
-  readBy: [{
-    user: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User'
-    },
-    readAt: {
-      type: Date,
-      default: Date.now
-    }
-  }],
-  deliveredTo: [{
-    user: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User'
-    },
-    deliveredAt: {
-      type: Date,
-      default: Date.now
-    }
-  }],
   unsent: {
-    type: Boolean,
-    default: false
+    type: DataTypes.BOOLEAN,
+    defaultValue: false
   },
-  unsentAt: Date,
-  replyTo: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Message'
+  unsentAt: {
+    type: DataTypes.DATE,
+    allowNull: true
   },
-  forwardedFrom: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Message'
+  replyToId: {
+    type: DataTypes.INTEGER,
+    allowNull: true
   },
-  deletedBy: [{
-    user: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User'
-    },
-    deletedAt: {
-      type: Date,
-      default: Date.now
-    }
-  }],
-  expiresAt: Date // For disappearing messages
+  expiresAt: {
+    type: DataTypes.DATE,
+    allowNull: true
+  }
 }, {
+  tableName: 'messages',
   timestamps: true
 });
 
-const Conversation = mongoose.model('Conversation', conversationSchema);
-const Message = mongoose.model('Message', messageSchema);
+const MessageRead = sequelize.define('MessageRead', {
+  id: {
+    type: DataTypes.INTEGER,
+    primaryKey: true,
+    autoIncrement: true
+  },
+  messageId: {
+    type: DataTypes.INTEGER,
+    allowNull: false
+  },
+  userId: {
+    type: DataTypes.INTEGER,
+    allowNull: false
+  },
+  readAt: {
+    type: DataTypes.DATE,
+    defaultValue: DataTypes.NOW
+  }
+}, {
+  tableName: 'message_reads',
+  timestamps: false
+});
 
-module.exports = { Conversation, Message };
+module.exports = { Conversation, ConversationParticipant, Message, MessageRead };

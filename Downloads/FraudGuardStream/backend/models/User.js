@@ -1,137 +1,89 @@
 /*
- * Instagram Clone - User Model
- * Cloned by Phumeh
+ * Instagram Clone - User Model (Sequelize)
+ * Created by Phumeh
  */
 
-const mongoose = require('mongoose');
+const { DataTypes } = require('sequelize');
+const sequelize = require('../config/database');
 
-const userSchema = new mongoose.Schema({
+const User = sequelize.define('User', {
+  id: {
+    type: DataTypes.INTEGER,
+    primaryKey: true,
+    autoIncrement: true
+  },
   username: {
-    type: String,
-    required: true,
-    unique: true,
-    trim: true,
-    minlength: 3,
-    maxlength: 30
+    type: DataTypes.STRING(30),
+    allowNull: false,
+    unique: true
   },
   email: {
-    type: String,
+    type: DataTypes.STRING,
     unique: true,
-    trim: true,
-    sparse: true
+    allowNull: true
   },
   phone: {
-    type: String,
+    type: DataTypes.STRING,
     unique: true,
-    trim: true,
-    sparse: true
+    allowNull: true
   },
   password: {
-    type: String,
-    required: true,
-    minlength: 6
+    type: DataTypes.STRING,
+    allowNull: false
   },
   fullName: {
-    type: String,
-    default: '',
-    maxlength: 50
+    type: DataTypes.STRING(50),
+    defaultValue: ''
   },
   profilePicture: {
-    type: String,
-    default: ''
+    type: DataTypes.STRING,
+    defaultValue: ''
   },
   bio: {
-    type: String,
-    default: '',
-    maxlength: 150
+    type: DataTypes.STRING(150),
+    defaultValue: ''
   },
   website: {
-    type: String,
-    default: ''
+    type: DataTypes.STRING,
+    defaultValue: ''
   },
   isPrivate: {
-    type: Boolean,
-    default: false
+    type: DataTypes.BOOLEAN,
+    defaultValue: false
   },
   isVerified: {
-    type: Boolean,
-    default: false
+    type: DataTypes.BOOLEAN,
+    defaultValue: false
   },
-  followers: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
-  }],
-  following: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
-  }],
-  blockedUsers: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
-  }],
-  mutedUsers: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
-  }],
-  closeFriends: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
-  }],
-  savedPosts: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Post'
-  }],
-  archivedPosts: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Post'
-  }],
-  recentSearches: [{
-    type: {
-      type: String,
-      enum: ['user', 'hashtag', 'location']
-    },
-    query: String,
-    userId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User'
-    },
-    searchedAt: {
-      type: Date,
-      default: Date.now
-    }
-  }],
   accountType: {
-    type: String,
-    enum: ['personal', 'business', 'creator'],
-    default: 'personal'
-  },
-  notificationSettings: {
-    likes: { type: Boolean, default: true },
-    comments: { type: Boolean, default: true },
-    follows: { type: Boolean, default: true },
-    mentions: { type: Boolean, default: true },
-    directMessages: { type: Boolean, default: true },
-    liveVideos: { type: Boolean, default: true },
-    reminders: { type: Boolean, default: true },
-    emailNotifications: { type: Boolean, default: false },
-    pushNotifications: { type: Boolean, default: true }
+    type: DataTypes.ENUM('personal', 'business', 'creator'),
+    defaultValue: 'personal'
   },
   isActive: {
-    type: Boolean,
-    default: true
+    type: DataTypes.BOOLEAN,
+    defaultValue: true
   },
   lastSeen: {
-    type: Date,
-    default: Date.now
+    type: DataTypes.DATE,
+    defaultValue: DataTypes.NOW
+  },
+  notificationSettings: {
+    type: DataTypes.JSON,
+    defaultValue: {
+      likes: true,
+      comments: true,
+      follows: true,
+      mentions: true,
+      directMessages: true,
+      liveVideos: true,
+      reminders: true,
+      emailNotifications: false,
+      pushNotifications: true
+    }
   }
 }, {
+  tableName: 'users',
   timestamps: true
 });
 
-// Indexes for better performance
-userSchema.index({ username: 1 });
-userSchema.index({ email: 1 });
-userSchema.index({ phone: 1 });
-userSchema.index({ fullName: 'text', username: 'text' });
-
-module.exports = mongoose.model('User', userSchema);
+module.exports = User;

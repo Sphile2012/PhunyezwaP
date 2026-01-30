@@ -4,7 +4,7 @@
  */
 
 const express = require('express');
-const Live = require('../models/Live');
+const { User, Live, LiveViewer } = require('../models');
 const { createNotification } = require('./notifications');
 const auth = require('../middleware/auth');
 
@@ -15,23 +15,24 @@ router.post('/start', auth, async (req, res) => {
   try {
     const { title, visibility } = req.body;
 
-    const live = new Live({
-      user: req.user._id,
+    const live = await Live.create({
+      userId: req.user.id,
       title: title || `${req.user.username}'s Live`,
       visibility: visibility || 'public'
     });
 
-    await live.save();
-    await live.populate('user', 'username profilePicture isVerified');
+    const liveWithUser = await Live.findByPk(live.id, {
+      include: [{ model: User, as: 'user', attributes: ['id', 'username', 'profilePicture', 'isVerified'] }]
+    });
 
     // Notify followers
     req.io?.emit('user_went_live', {
-      userId: req.user._id,
+      userId: req.user.id,
       username: req.user.username,
-      liveId: live._id
+      liveId: live.id
     });
 
-    res.status(201).json(live);
+    res.status(201).json(liveWithUser);
   } catch (error) {
     console.error('Start live error:', error);
     res.status(500).json({ message: 'Server error' });
@@ -41,13 +42,13 @@ router.post('/start', auth, async (req, res) => {
 // End live
 router.put('/:id/end', auth, async (req, res) => {
   try {
-    const live = await Live.findById(req.params.id);
+    const live = await Live.findByPk(req.params.id);
 
     if (!live) {
       return res.status(404).json({ message: 'Live not found' });
     }
 
-    if (live.user.toString() !== req.user._id.toString()) {
+    if (live.userId !== req.user.id) {
       return res.status(403).json({ message: 'Not authorized' });
     }
 
@@ -57,8 +58,8 @@ router.put('/:id/end', auth, async (req, res) => {
     await live.save();
 
     req.io?.emit('user_ended_live', {
-      userId: req.user._id,
-      liveId: live._id
+      userId: req.user.id,
+      liveId: live.id
     });
 
     res.json({ message: 'Live ended', duration: live.duration });
@@ -71,25 +72,27 @@ router.put('/:id/end', auth, async (req, res) => {
 // Join live
 router.put('/:id/join', auth, async (req, res) => {
   try {
-    const live = await Live.findById(req.params.id);
+    const live = await Live.findByPk(req.params.id, {
+      include: [{ model: User, as: 'user', attributes: ['id', 'username', 'profilePicture', 'isVerified'] }]
+    });
 
     if (!live || !live.isActive) {
       return res.status(404).json({ message: 'Live not found or ended' });
     }
 
-    const alreadyViewing = live.viewers.some(
-      v => v.user.toString() === req.user._id.toString()
-    );
+    const [viewer, created] = await LiveViewer.findOrCreate({
+      where: { liveId: req.params.id, userId: req.user.id },
+      defaults: { liveId: req.params.id, userId: req.user.id }
+    });
 
-    if (!alreadyViewing) {
-      live.viewers.push({ user: req.user._id });
-      if (live.viewers.length > live.peakViewers) {
-        live.peakViewers = live.viewers.length;
+    if (created) {
+      const viewerCount = await LiveViewer.count({ where: { liveId: req.params.id } });
+      if (viewerCount > live.peakViewers) {
+        live.peakViewers = viewerCount;
+        await live.save();
       }
-      await live.save();
     }
 
-    await live.populate('user', 'username profilePicture isVerified');
     res.json(live);
   } catch (error) {
     console.error('Join live error:', error);
@@ -100,14 +103,9 @@ router.put('/:id/join', auth, async (req, res) => {
 // Leave live
 router.put('/:id/leave', auth, async (req, res) => {
   try {
-    const live = await Live.findById(req.params.id);
-
-    if (live) {
-      live.viewers = live.viewers.filter(
-        v => v.user.toString() !== req.user._id.toString()
-      );
-      await live.save();
-    }
+    await LiveViewer.destroy({
+      where: { liveId: req.params.id, userId: req.user.id }
+    });
 
     res.json({ message: 'Left live' });
   } catch (error) {
@@ -120,22 +118,23 @@ router.put('/:id/leave', auth, async (req, res) => {
 router.post('/:id/comment', auth, async (req, res) => {
   try {
     const { text } = req.body;
-    const live = await Live.findById(req.params.id);
+    const live = await Live.findByPk(req.params.id);
 
     if (!live || !live.isActive) {
       return res.status(404).json({ message: 'Live not found or ended' });
     }
 
-    const comment = {
-      user: req.user._id,
-      text
-    };
-
-    live.comments.push(comment);
+    const comments = live.comments || [];
+    comments.push({
+      userId: req.user.id,
+      text,
+      createdAt: new Date()
+    });
+    live.comments = comments;
     await live.save();
 
     req.io?.to(`live_${req.params.id}`).emit('live_comment', {
-      user: { _id: req.user._id, username: req.user.username },
+      user: { id: req.user.id, username: req.user.username },
       text,
       createdAt: new Date()
     });
@@ -150,17 +149,16 @@ router.post('/:id/comment', auth, async (req, res) => {
 // Like live
 router.post('/:id/like', auth, async (req, res) => {
   try {
-    const live = await Live.findById(req.params.id);
+    const live = await Live.findByPk(req.params.id);
 
     if (!live || !live.isActive) {
       return res.status(404).json({ message: 'Live not found or ended' });
     }
 
-    live.likes.push({ user: req.user._id });
-    await live.save();
+    await live.increment('likesCount');
 
     req.io?.to(`live_${req.params.id}`).emit('live_like', {
-      userId: req.user._id,
+      userId: req.user.id,
       username: req.user.username
     });
 
@@ -174,9 +172,13 @@ router.post('/:id/like', auth, async (req, res) => {
 // Get active lives
 router.get('/active', auth, async (req, res) => {
   try {
-    const lives = await Live.find({ isActive: true })
-      .populate('user', 'username profilePicture isVerified')
-      .sort({ 'viewers.length': -1, createdAt: -1 });
+    const lives = await Live.findAll({
+      where: { isActive: true },
+      include: [
+        { model: User, as: 'user', attributes: ['id', 'username', 'profilePicture', 'isVerified'] }
+      ],
+      order: [['createdAt', 'DESC']]
+    });
 
     res.json(lives);
   } catch (error) {

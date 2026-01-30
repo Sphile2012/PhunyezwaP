@@ -4,7 +4,7 @@
  */
 
 const express = require('express');
-const Collection = require('../models/Collection');
+const { User, Collection, CollectionPost, Post } = require('../models');
 const auth = require('../middleware/auth');
 
 const router = express.Router();
@@ -12,10 +12,18 @@ const router = express.Router();
 // Get user's collections
 router.get('/', auth, async (req, res) => {
   try {
-    const collections = await Collection.find({ user: req.user._id })
-      .populate('posts', 'media')
-      .populate('reels', 'video')
-      .sort({ updatedAt: -1 });
+    const collections = await Collection.findAll({
+      where: { userId: req.user.id },
+      include: [
+        { 
+          model: Post, 
+          as: 'posts',
+          attributes: ['id', 'media'],
+          through: { attributes: [] }
+        }
+      ],
+      order: [['updatedAt', 'DESC']]
+    });
 
     res.json(collections);
   } catch (error) {
@@ -29,13 +37,12 @@ router.post('/', auth, async (req, res) => {
   try {
     const { name, coverImage } = req.body;
 
-    const collection = new Collection({
-      user: req.user._id,
+    const collection = await Collection.create({
+      userId: req.user.id,
       name,
       coverImage
     });
 
-    await collection.save();
     res.status(201).json(collection);
   } catch (error) {
     console.error('Create collection error:', error);
@@ -46,21 +53,22 @@ router.post('/', auth, async (req, res) => {
 // Get single collection
 router.get('/:id', auth, async (req, res) => {
   try {
-    const collection = await Collection.findById(req.params.id)
-      .populate({
-        path: 'posts',
-        populate: { path: 'user', select: 'username profilePicture' }
-      })
-      .populate({
-        path: 'reels',
-        populate: { path: 'user', select: 'username profilePicture' }
-      });
+    const collection = await Collection.findByPk(req.params.id, {
+      include: [
+        {
+          model: Post,
+          as: 'posts',
+          include: [{ model: User, as: 'user', attributes: ['id', 'username', 'profilePicture'] }],
+          through: { attributes: [] }
+        }
+      ]
+    });
 
     if (!collection) {
       return res.status(404).json({ message: 'Collection not found' });
     }
 
-    if (collection.user.toString() !== req.user._id.toString()) {
+    if (collection.userId !== req.user.id) {
       return res.status(403).json({ message: 'Not authorized' });
     }
 
@@ -75,13 +83,13 @@ router.get('/:id', auth, async (req, res) => {
 router.put('/:id', auth, async (req, res) => {
   try {
     const { name, coverImage } = req.body;
-    const collection = await Collection.findById(req.params.id);
+    const collection = await Collection.findByPk(req.params.id);
 
     if (!collection) {
       return res.status(404).json({ message: 'Collection not found' });
     }
 
-    if (collection.user.toString() !== req.user._id.toString()) {
+    if (collection.userId !== req.user.id) {
       return res.status(403).json({ message: 'Not authorized' });
     }
 
@@ -99,17 +107,17 @@ router.put('/:id', auth, async (req, res) => {
 // Delete collection
 router.delete('/:id', auth, async (req, res) => {
   try {
-    const collection = await Collection.findById(req.params.id);
+    const collection = await Collection.findByPk(req.params.id);
 
     if (!collection) {
       return res.status(404).json({ message: 'Collection not found' });
     }
 
-    if (collection.user.toString() !== req.user._id.toString()) {
+    if (collection.userId !== req.user.id) {
       return res.status(403).json({ message: 'Not authorized' });
     }
 
-    await Collection.findByIdAndDelete(req.params.id);
+    await collection.destroy();
     res.json({ message: 'Collection deleted' });
   } catch (error) {
     console.error('Delete collection error:', error);
@@ -120,19 +128,25 @@ router.delete('/:id', auth, async (req, res) => {
 // Add post to collection
 router.post('/:id/posts/:postId', auth, async (req, res) => {
   try {
-    const collection = await Collection.findById(req.params.id);
+    const collection = await Collection.findByPk(req.params.id);
 
     if (!collection) {
       return res.status(404).json({ message: 'Collection not found' });
     }
 
-    if (collection.user.toString() !== req.user._id.toString()) {
+    if (collection.userId !== req.user.id) {
       return res.status(403).json({ message: 'Not authorized' });
     }
 
-    if (!collection.posts.includes(req.params.postId)) {
-      collection.posts.push(req.params.postId);
-      await collection.save();
+    const existingEntry = await CollectionPost.findOne({
+      where: { collectionId: req.params.id, postId: req.params.postId }
+    });
+
+    if (!existingEntry) {
+      await CollectionPost.create({
+        collectionId: req.params.id,
+        postId: req.params.postId
+      });
     }
 
     res.json({ message: 'Post added to collection' });
@@ -145,20 +159,19 @@ router.post('/:id/posts/:postId', auth, async (req, res) => {
 // Remove post from collection
 router.delete('/:id/posts/:postId', auth, async (req, res) => {
   try {
-    const collection = await Collection.findById(req.params.id);
+    const collection = await Collection.findByPk(req.params.id);
 
     if (!collection) {
       return res.status(404).json({ message: 'Collection not found' });
     }
 
-    if (collection.user.toString() !== req.user._id.toString()) {
+    if (collection.userId !== req.user.id) {
       return res.status(403).json({ message: 'Not authorized' });
     }
 
-    collection.posts = collection.posts.filter(
-      p => p.toString() !== req.params.postId
-    );
-    await collection.save();
+    await CollectionPost.destroy({
+      where: { collectionId: req.params.id, postId: req.params.postId }
+    });
 
     res.json({ message: 'Post removed from collection' });
   } catch (error) {

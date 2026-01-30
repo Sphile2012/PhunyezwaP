@@ -1,151 +1,68 @@
 /*
- * Instagram Clone - Reel Model
- * Cloned by Phumeh
+ * Instagram Clone - Reel Model (Sequelize)
+ * Created by Phumeh
  */
 
-const mongoose = require('mongoose');
+const { DataTypes } = require('sequelize');
+const sequelize = require('../config/database');
 
-const reelSchema = new mongoose.Schema({
-  user: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true
+const Reel = sequelize.define('Reel', {
+  id: {
+    type: DataTypes.INTEGER,
+    primaryKey: true,
+    autoIncrement: true
   },
-  video: {
-    url: {
-      type: String,
-      required: true
-    },
-    thumbnail: {
-      type: String,
-      required: true
-    },
-    duration: {
-      type: Number,
-      required: true
-    }
+  userId: {
+    type: DataTypes.INTEGER,
+    allowNull: false
   },
-  audio: {
-    title: String,
-    artist: String,
-    url: String,
-    originalReel: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Reel'
-    }
+  videoUrl: {
+    type: DataTypes.STRING,
+    allowNull: false
+  },
+  thumbnail: {
+    type: DataTypes.STRING,
+    allowNull: true
   },
   caption: {
-    type: String,
-    default: '',
-    maxlength: 2200
+    type: DataTypes.STRING(2200),
+    defaultValue: ''
   },
-  hashtags: [{
-    type: String,
-    trim: true
-  }],
-  mentions: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
-  }],
-  effects: [{
-    name: String,
-    id: String
-  }],
-  likes: [{
-    user: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User'
-    },
-    createdAt: {
-      type: Date,
-      default: Date.now
-    }
-  }],
-  comments: [{
-    user: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
-      required: true
-    },
-    text: {
-      type: String,
-      required: true,
-      maxlength: 500
-    },
-    likes: [{
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User'
-    }],
-    replies: [{
-      user: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User'
-      },
-      text: {
-        type: String,
-        required: true
-      },
-      likes: [{
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User'
-      }],
-      createdAt: {
-        type: Date,
-        default: Date.now
-      }
-    }],
-    createdAt: {
-      type: Date,
-      default: Date.now
-    }
-  }],
-  shares: [{
-    user: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User'
-    },
-    createdAt: {
-      type: Date,
-      default: Date.now
-    }
-  }],
+  duration: {
+    type: DataTypes.INTEGER,
+    allowNull: true
+  },
+  music: {
+    type: DataTypes.JSON,
+    allowNull: true
+  },
+  hashtags: {
+    type: DataTypes.JSON,
+    defaultValue: []
+  },
+  mentions: {
+    type: DataTypes.JSON,
+    defaultValue: []
+  },
   views: {
-    type: Number,
-    default: 0
+    type: DataTypes.INTEGER,
+    defaultValue: 0
   },
-  plays: {
-    type: Number,
-    default: 0
-  },
-  remixes: [{
-    user: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User'
-    },
-    reel: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Reel'
-    },
-    createdAt: {
-      type: Date,
-      default: Date.now
-    }
-  }],
-  isOriginalAudio: {
-    type: Boolean,
-    default: true
+  shares: {
+    type: DataTypes.INTEGER,
+    defaultValue: 0
   },
   commentsDisabled: {
-    type: Boolean,
-    default: false
+    type: DataTypes.BOOLEAN,
+    defaultValue: false
   },
   audience: {
-    type: String,
-    enum: ['public', 'followers'],
-    default: 'public'
+    type: DataTypes.ENUM('public', 'followers'),
+    defaultValue: 'public'
   }
 }, {
+  tableName: 'reels',
   timestamps: true
 });
 
-module.exports = mongoose.model('Reel', reelSchema);
+module.exports = Reel;

@@ -1,53 +1,62 @@
 # Instagram Clone Deployment Guide
 **Created by Phumeh**
 
-## ✅ Full Stack Ready for Netlify!
+## 🗄️ Database: SQLite with Sequelize
 
-Both frontend and backend (serverless functions) are configured for Netlify deployment.
+This project now uses **SQLite with Sequelize** instead of MongoDB. The SQLite database file is created automatically at `backend/database.sqlite`.
 
-## 🚀 Deploy to Netlify
+## 🚀 Local Development
 
-### Step 1: Set Up MongoDB Atlas (Required)
-1. Go to https://www.mongodb.com/atlas
-2. Create a free account and cluster
-3. Create a database user and get your connection string
-4. Whitelist `0.0.0.0/0` for IP access
-
-### Step 2: Set Up Cloudinary (For Image Uploads)
-1. Go to https://cloudinary.com
-2. Create a free account
-3. Get your Cloud Name, API Key, and API Secret from Dashboard
-
-### Step 3: Push to GitHub
+### Install Dependencies
 ```bash
-git add .
-git commit -m "Instagram Clone by Phumeh - Full Stack Ready"
-git push origin main
+# Install all dependencies
+npm run install-deps
+
+# Or manually:
+cd backend && npm install
+cd ../frontend && npm install
 ```
 
-### Step 4: Deploy on Netlify
-1. Go to https://app.netlify.com
-2. Click **"New site from Git"**
-3. Connect GitHub and select your repo
-4. Build settings (auto-detected from netlify.toml):
-   - **Base directory:** `frontend`
-   - **Build command:** `npm install && npm run build`
-   - **Publish directory:** `frontend/build`
-   - **Functions directory:** `netlify/functions`
+### Run Locally
+```bash
+# Run both frontend and backend
+npm run dev
 
-### Step 5: Add Environment Variables
-In Netlify Dashboard → Site Settings → Environment Variables, add:
+# Or run separately:
+cd backend && npm run dev    # Backend on port 5000
+cd frontend && npm start     # Frontend on port 3000
+```
 
-| Variable | Value |
-|----------|-------|
-| `MONGODB_URI` | `mongodb+srv://user:pass@cluster.mongodb.net/instagram` |
-| `JWT_SECRET` | `your-super-secret-jwt-key-make-it-long` |
-| `CLOUDINARY_CLOUD_NAME` | `your-cloud-name` |
-| `CLOUDINARY_API_KEY` | `your-api-key` |
-| `CLOUDINARY_API_SECRET` | `your-api-secret` |
+## 🌐 Deploy to Netlify (Frontend Only)
 
-### Step 6: Redeploy
-After adding environment variables, trigger a new deploy.
+Since SQLite requires persistent storage, for Netlify deployment we recommend:
+
+### Option 1: Frontend on Netlify + Backend on Render/Railway
+
+1. **Deploy Backend to Render/Railway:**
+   - Create account on https://render.com or https://railway.app
+   - Connect your GitHub repo
+   - Set build command: `cd backend && npm install`
+   - Set start command: `cd backend && npm start`
+   - Add environment variables:
+     - `JWT_SECRET=your-secret-key`
+     - `NODE_ENV=production`
+
+2. **Deploy Frontend to Netlify:**
+   - Go to https://app.netlify.com
+   - Connect your GitHub repo
+   - Set build command: `cd frontend && npm install && npm run build`
+   - Set publish directory: `frontend/build`
+   - Add environment variable:
+     - `REACT_APP_API_URL=https://your-backend-url.onrender.com`
+
+### Option 2: Use Turso (Serverless SQLite)
+
+For true serverless deployment with SQLite, use [Turso](https://turso.tech):
+
+1. Create Turso account and database
+2. Update `backend/config/database.js` to use Turso connection
+3. Add Turso credentials to environment variables
 
 ## 📡 API Endpoints
 
@@ -79,7 +88,6 @@ All API endpoints are available at `/api/*`:
 ### Reels
 - `GET /api/reels/feed` - Get reels feed
 - `POST /api/reels` - Create reel
-- `GET /api/reels/:id` - Get single reel
 - `PUT /api/reels/:id/like` - Like/unlike reel
 
 ### Search
@@ -100,27 +108,6 @@ All API endpoints are available at `/api/*`:
 ### Health
 - `GET /api/health` - API health check
 
-## 🔧 Local Development
-
-### Install Functions Dependencies
-```bash
-cd netlify/functions
-npm install
-cd ../..
-```
-
-### Run Frontend Locally
-```bash
-cd frontend
-npm start
-```
-
-### Test API Locally with Netlify CLI
-```bash
-npm install -g netlify-cli
-netlify dev
-```
-
 ## 📱 Features
 
 - ✅ User authentication (JWT)
@@ -133,16 +120,28 @@ netlify dev
 - ✅ Search users/hashtags
 - ✅ Notifications
 - ✅ User profiles
-- ✅ Cloudinary image uploads
+- ✅ SQLite database (no external database needed!)
 
-## ⚠️ Notes
+## 🗄️ Database Schema
 
-1. **Serverless Limitations**: WebSocket/Socket.IO features won't work (real-time messaging uses polling instead)
-2. **Cold Starts**: First request after inactivity may be slow
-3. **File Uploads**: Use Cloudinary URLs in POST requests (client-side upload to Cloudinary, then send URL to API)
+The SQLite database includes these tables:
+- `users` - User accounts
+- `posts` - Posts/photos
+- `comments` - Post comments
+- `likes` - Likes on posts/comments/reels
+- `follows` - User relationships
+- `stories` - Stories
+- `story_views` - Story view tracking
+- `reels` - Video reels
+- `conversations` - Message conversations
+- `messages` - Direct messages
+- `notifications` - User notifications
+- `collections` - Saved post collections
+- `highlights` - Story highlights
+- `reports` - Content reports
 
 ---
 
-**Your Full Stack Instagram Clone is ready! 🚀**
+**Your Instagram Clone is ready! 🚀**
 
 Created by Phumeh

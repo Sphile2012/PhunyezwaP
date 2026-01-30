@@ -1,10 +1,12 @@
 /*
- * Instagram Clone - Users Routes
+ * Instagram Clone - Users Routes (Sequelize)
  * Created by Phumeh
  */
 
 const express = require('express');
 const auth = require('../middleware/auth');
+const { User, Post, Follow, FollowRequest } = require('../models');
+const { Op } = require('sequelize');
 
 const router = express.Router();
 
@@ -26,60 +28,31 @@ const demoProfiles = {
   }
 };
 
-// Get User model safely
-const getUser = () => {
-  try {
-    const User = require('../models/User');
-    if (User.db?.readyState === 1) return User;
-    return null;
-  } catch (e) {
-    return null;
-  }
-};
-
-// Get Post model safely
-const getPost = () => {
-  try {
-    const Post = require('../models/Post');
-    if (Post.db?.readyState === 1) return Post;
-    return null;
-  } catch (e) {
-    return null;
-  }
-};
-
 // Get user profile
 router.get('/:username', auth, async (req, res) => {
   try {
-    const User = getUser();
-    const Post = getPost();
+    const user = await User.findOne({ 
+      where: { username: req.params.username },
+      attributes: { exclude: ['password'] }
+    });
     
-    if (User) {
-      const user = await User.findOne({ username: req.params.username })
-        .select('-password')
-        .populate('followers', 'username profilePicture isVerified')
-        .populate('following', 'username profilePicture isVerified');
+    if (user && user.isActive) {
+      const followersCount = await Follow.count({ where: { followingId: user.id } });
+      const followingCount = await Follow.count({ where: { followerId: user.id } });
       
-      if (!user || !user.isActive) {
-        return res.status(404).json({ message: 'User not found' });
-      }
+      const posts = await Post.findAll({ 
+        where: { userId: user.id, isArchived: false },
+        include: [{ model: User, as: 'user', attributes: ['username', 'profilePicture'] }],
+        order: [['createdAt', 'DESC']]
+      });
 
-      if (user.blockedUsers.includes(req.user._id)) {
-        return res.status(403).json({ message: 'Access denied' });
-      }
-
-      let posts = [];
-      if (Post) {
-        posts = await Post.find({ user: user._id, isArchived: false })
-          .populate('user', 'username profilePicture')
-          .sort({ createdAt: -1 });
-      }
-
-      const isFollowing = user.followers.some(f => f._id.toString() === req.user._id.toString());
+      const isFollowing = await Follow.findOne({
+        where: { followerId: req.user.id, followingId: user.id }
+      });
 
       return res.json({
         user: {
-          id: user._id,
+          id: user.id,
           username: user.username,
           fullName: user.fullName,
           profilePicture: user.profilePicture,
@@ -88,21 +61,24 @@ router.get('/:username', auth, async (req, res) => {
           isPrivate: user.isPrivate,
           isVerified: user.isVerified,
           accountType: user.accountType,
-          followers: user.followers.length,
-          following: user.following.length,
-          posts: posts.length
+          followers: followersCount,
+          following: followingCount,
+          posts: posts ? posts.length : 0
         },
-        posts,
-        isFollowing,
-        isOwnProfile: user._id.toString() === req.user._id.toString()
+        posts: posts || [],
+        isFollowing: !!isFollowing,
+        isOwnProfile: user.id === req.user.id
       });
+    }
+
+    if (user && !user.isActive) {
+      return res.status(404).json({ message: 'User not found' });
     }
 
     // Demo mode
     let profile = demoProfiles[req.params.username];
     
     if (!profile) {
-      // Create demo profile
       profile = {
         _id: 'user-' + req.params.username,
         username: req.params.username,
@@ -155,51 +131,46 @@ router.get('/:username', auth, async (req, res) => {
 // Follow/Unfollow user
 router.put('/:id/follow', auth, async (req, res) => {
   try {
-    const User = getUser();
+    const userToFollow = await User.findByPk(req.params.id);
     
-    if (User) {
-      const userToFollow = await User.findById(req.params.id);
-      const currentUser = await User.findById(req.user._id);
-      
-      if (!userToFollow || !userToFollow.isActive) {
-        return res.status(404).json({ message: 'User not found' });
-      }
-
-      if (userToFollow._id.toString() === req.user._id.toString()) {
-        return res.status(400).json({ message: 'Cannot follow yourself' });
-      }
-
-      const isFollowing = currentUser.following.includes(req.params.id);
-      
-      if (isFollowing) {
-        currentUser.following = currentUser.following.filter(
-          id => id.toString() !== req.params.id
-        );
-        userToFollow.followers = userToFollow.followers.filter(
-          id => id.toString() !== req.user._id.toString()
-        );
-      } else {
-        currentUser.following.push(req.params.id);
-        userToFollow.followers.push(req.user._id);
-      }
-
-      await currentUser.save();
-      await userToFollow.save();
-
-      return res.json({ 
-        isFollowing: !isFollowing,
-        followers: userToFollow.followers.length,
-        following: currentUser.following.length
-      });
+    if (!userToFollow || !userToFollow.isActive) {
+      return res.status(404).json({ message: 'User not found' });
     }
 
-    // Demo mode
-    res.json({ 
-      isFollowing: true,
-      followers: 1235,
-      following: 568,
-      message: 'Following!'
+    if (userToFollow.id === req.user.id) {
+      return res.status(400).json({ message: 'Cannot follow yourself' });
+    }
+
+    const existingFollow = await Follow.findOne({
+      where: { followerId: req.user.id, followingId: req.params.id }
     });
+    
+    if (existingFollow) {
+      await existingFollow.destroy();
+      
+      const followersCount = await Follow.count({ where: { followingId: req.params.id } });
+      const followingCount = await Follow.count({ where: { followerId: req.user.id } });
+      
+      return res.json({ 
+        isFollowing: false,
+        followers: followersCount,
+        following: followingCount
+      });
+    } else {
+      await Follow.create({
+        followerId: req.user.id,
+        followingId: parseInt(req.params.id)
+      });
+      
+      const followersCount = await Follow.count({ where: { followingId: req.params.id } });
+      const followingCount = await Follow.count({ where: { followerId: req.user.id } });
+      
+      return res.json({ 
+        isFollowing: true,
+        followers: followersCount,
+        following: followingCount
+      });
+    }
   } catch (error) {
     console.error('Follow/unfollow error:', error);
     res.status(500).json({ message: 'Server error' });
@@ -209,31 +180,33 @@ router.put('/:id/follow', auth, async (req, res) => {
 // Get suggested users
 router.get('/suggestions/for-you', auth, async (req, res) => {
   try {
-    const User = getUser();
+    const followingIds = await Follow.findAll({
+      where: { followerId: req.user.id },
+      attributes: ['followingId']
+    });
     
-    if (User) {
-      const currentUser = await User.findById(req.user._id);
-      
-      const suggestions = await User.aggregate([
-        {
-          $match: {
-            _id: { $nin: [...currentUser.following, ...currentUser.blockedUsers, req.user._id] },
-            isActive: true
-          }
-        },
-        { $sort: { isVerified: -1 } },
-        { $limit: 20 },
-        {
-          $project: {
-            username: 1,
-            fullName: 1,
-            profilePicture: 1,
-            isVerified: 1
-          }
-        }
-      ]);
+    const excludeIds = [req.user.id, ...followingIds.map(f => f.followingId)];
+    
+    const suggestions = await User.findAll({
+      where: {
+        id: { [Op.notIn]: excludeIds },
+        isActive: true
+      },
+      attributes: ['id', 'username', 'fullName', 'profilePicture', 'isVerified'],
+      order: [['isVerified', 'DESC']],
+      limit: 20
+    });
 
-      return res.json(suggestions);
+    const formatted = suggestions.map(u => ({
+      _id: u.id,
+      username: u.username,
+      fullName: u.fullName,
+      profilePicture: u.profilePicture,
+      isVerified: u.isVerified
+    }));
+
+    if (formatted.length > 0) {
+      return res.json(formatted);
     }
 
     // Demo mode
@@ -253,18 +226,17 @@ router.get('/suggestions/for-you', auth, async (req, res) => {
 // Block user
 router.put('/:id/block', auth, async (req, res) => {
   try {
-    const isBlocked = req.user.blockedUsers?.includes(req.params.id);
+    const currentUser = await User.findByPk(req.user.id);
+    const blockedUsers = currentUser.blockedUsers || [];
+    const isBlocked = blockedUsers.includes(parseInt(req.params.id));
     
     if (isBlocked) {
-      req.user.blockedUsers = req.user.blockedUsers.filter(
-        id => id.toString() !== req.params.id
-      );
+      currentUser.blockedUsers = blockedUsers.filter(id => id !== parseInt(req.params.id));
     } else {
-      if (!req.user.blockedUsers) req.user.blockedUsers = [];
-      req.user.blockedUsers.push(req.params.id);
+      currentUser.blockedUsers = [...blockedUsers, parseInt(req.params.id)];
     }
 
-    if (req.user.save) await req.user.save();
+    await currentUser.save();
 
     res.json({ 
       isBlocked: !isBlocked,
@@ -279,18 +251,17 @@ router.put('/:id/block', auth, async (req, res) => {
 // Mute user
 router.put('/:id/mute', auth, async (req, res) => {
   try {
-    const isMuted = req.user.mutedUsers?.includes(req.params.id);
+    const currentUser = await User.findByPk(req.user.id);
+    const mutedUsers = currentUser.mutedUsers || [];
+    const isMuted = mutedUsers.includes(parseInt(req.params.id));
     
     if (isMuted) {
-      req.user.mutedUsers = req.user.mutedUsers.filter(
-        id => id.toString() !== req.params.id
-      );
+      currentUser.mutedUsers = mutedUsers.filter(id => id !== parseInt(req.params.id));
     } else {
-      if (!req.user.mutedUsers) req.user.mutedUsers = [];
-      req.user.mutedUsers.push(req.params.id);
+      currentUser.mutedUsers = [...mutedUsers, parseInt(req.params.id)];
     }
 
-    if (req.user.save) await req.user.save();
+    await currentUser.save();
 
     res.json({ 
       isMuted: !isMuted,
@@ -305,18 +276,17 @@ router.put('/:id/mute', auth, async (req, res) => {
 // Add to close friends
 router.put('/:id/close-friends', auth, async (req, res) => {
   try {
-    const isCloseFriend = req.user.closeFriends?.includes(req.params.id);
+    const currentUser = await User.findByPk(req.user.id);
+    const closeFriends = currentUser.closeFriends || [];
+    const isCloseFriend = closeFriends.includes(parseInt(req.params.id));
     
     if (isCloseFriend) {
-      req.user.closeFriends = req.user.closeFriends.filter(
-        id => id.toString() !== req.params.id
-      );
+      currentUser.closeFriends = closeFriends.filter(id => id !== parseInt(req.params.id));
     } else {
-      if (!req.user.closeFriends) req.user.closeFriends = [];
-      req.user.closeFriends.push(req.params.id);
+      currentUser.closeFriends = [...closeFriends, parseInt(req.params.id)];
     }
 
-    if (req.user.save) await req.user.save();
+    await currentUser.save();
 
     res.json({ 
       isCloseFriend: !isCloseFriend,
@@ -331,17 +301,32 @@ router.put('/:id/close-friends', auth, async (req, res) => {
 // Get followers
 router.get('/:id/followers', auth, async (req, res) => {
   try {
-    const User = getUser();
+    const user = await User.findByPk(req.params.id);
     
-    if (User) {
-      const user = await User.findById(req.params.id)
-        .populate('followers', 'username fullName profilePicture isVerified');
-      
-      if (!user) {
-        return res.status(404).json({ message: 'User not found' });
-      }
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
 
-      return res.json(user.followers);
+    const follows = await Follow.findAll({
+      where: { followingId: req.params.id },
+      attributes: ['followerId']
+    });
+
+    if (follows && follows.length > 0) {
+      const followerIds = follows.map(f => f.followerId);
+      const followers = await User.findAll({
+        where: { id: { [Op.in]: followerIds } },
+        attributes: ['id', 'username', 'fullName', 'profilePicture', 'isVerified']
+      });
+      
+      const formatted = followers.map(u => ({
+        _id: u.id,
+        username: u.username,
+        fullName: u.fullName,
+        profilePicture: u.profilePicture,
+        isVerified: u.isVerified
+      }));
+      return res.json(formatted);
     }
 
     // Demo mode
@@ -358,17 +343,32 @@ router.get('/:id/followers', auth, async (req, res) => {
 // Get following
 router.get('/:id/following', auth, async (req, res) => {
   try {
-    const User = getUser();
+    const user = await User.findByPk(req.params.id);
     
-    if (User) {
-      const user = await User.findById(req.params.id)
-        .populate('following', 'username fullName profilePicture isVerified');
-      
-      if (!user) {
-        return res.status(404).json({ message: 'User not found' });
-      }
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
 
-      return res.json(user.following);
+    const follows = await Follow.findAll({
+      where: { followerId: req.params.id },
+      attributes: ['followingId']
+    });
+
+    if (follows && follows.length > 0) {
+      const followingIds = follows.map(f => f.followingId);
+      const following = await User.findAll({
+        where: { id: { [Op.in]: followingIds } },
+        attributes: ['id', 'username', 'fullName', 'profilePicture', 'isVerified']
+      });
+      
+      const formatted = following.map(u => ({
+        _id: u.id,
+        username: u.username,
+        fullName: u.fullName,
+        profilePicture: u.profilePicture,
+        isVerified: u.isVerified
+      }));
+      return res.json(formatted);
     }
 
     // Demo mode

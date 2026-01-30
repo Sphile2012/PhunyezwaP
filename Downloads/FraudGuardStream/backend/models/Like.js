@@ -1,32 +1,36 @@
 /*
- * Instagram Clone - Follow Request Model (Sequelize)
+ * Instagram Clone - Like Model (Sequelize)
  * Created by Phumeh
  */
 
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
 
-const FollowRequest = sequelize.define('FollowRequest', {
+const Like = sequelize.define('Like', {
   id: {
     type: DataTypes.INTEGER,
     primaryKey: true,
     autoIncrement: true
   },
-  fromUserId: {
+  userId: {
     type: DataTypes.INTEGER,
     allowNull: false
   },
-  toUserId: {
+  postId: {
     type: DataTypes.INTEGER,
-    allowNull: false
+    allowNull: true
   },
-  status: {
-    type: DataTypes.ENUM('pending', 'accepted', 'rejected'),
-    defaultValue: 'pending'
+  commentId: {
+    type: DataTypes.INTEGER,
+    allowNull: true
+  },
+  reelId: {
+    type: DataTypes.INTEGER,
+    allowNull: true
   }
 }, {
-  tableName: 'follow_requests',
+  tableName: 'likes',
   timestamps: true
 });
 
-module.exports = FollowRequest;
+module.exports = Like;

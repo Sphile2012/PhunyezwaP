@@ -1,73 +1,56 @@
 /*
- * Instagram Clone - Notification Model
- * Cloned by Phumeh
+ * Instagram Clone - Notification Model (Sequelize)
+ * Created by Phumeh
  */
 
-const mongoose = require('mongoose');
+const { DataTypes } = require('sequelize');
+const sequelize = require('../config/database');
 
-const notificationSchema = new mongoose.Schema({
-  recipient: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true
+const Notification = sequelize.define('Notification', {
+  id: {
+    type: DataTypes.INTEGER,
+    primaryKey: true,
+    autoIncrement: true
   },
-  sender: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true
+  userId: {
+    type: DataTypes.INTEGER,
+    allowNull: false
+  },
+  fromUserId: {
+    type: DataTypes.INTEGER,
+    allowNull: false
   },
   type: {
-    type: String,
-    enum: [
-      'like_post', 'like_comment', 'like_reel', 'like_story',
-      'comment_post', 'comment_reel', 'reply_comment',
-      'follow', 'follow_request', 'follow_accept',
-      'mention_post', 'mention_comment', 'mention_story',
-      'tag_post', 'tag_story',
-      'share_post', 'share_reel', 'share_story',
-      'story_view', 'live_start',
-      'message', 'video_call', 'voice_call'
-    ],
-    required: true
+    type: DataTypes.ENUM('like', 'comment', 'follow', 'mention', 'tag', 'story_mention', 'live', 'message', 'follow_request'),
+    allowNull: false
   },
-  content: {
-    post: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Post'
-    },
-    reel: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Reel'
-    },
-    story: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Story'
-    },
-    comment: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Comment'
-    },
-    message: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Message'
-    }
+  postId: {
+    type: DataTypes.INTEGER,
+    allowNull: true
+  },
+  reelId: {
+    type: DataTypes.INTEGER,
+    allowNull: true
+  },
+  storyId: {
+    type: DataTypes.INTEGER,
+    allowNull: true
+  },
+  commentId: {
+    type: DataTypes.INTEGER,
+    allowNull: true
   },
   message: {
-    type: String,
-    maxlength: 200
+    type: DataTypes.STRING,
+    allowNull: true
   },
   isRead: {
-    type: Boolean,
-    default: false
-  },
-  readAt: Date,
-  actionUrl: String
+    type: DataTypes.BOOLEAN,
+    defaultValue: false
+  }
 }, {
+  tableName: 'notifications',
   timestamps: true
 });
 
-// Index for efficient querying
-notificationSchema.index({ recipient: 1, createdAt: -1 });
-notificationSchema.index({ recipient: 1, isRead: 1 });
-
-module.exports = mongoose.model('Notification', notificationSchema);
+module.exports = Notification;

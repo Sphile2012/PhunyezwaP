@@ -1,117 +1,117 @@
 /*
- * Instagram Clone - Posts Routes
+ * Instagram Clone - Posts Routes (Sequelize)
  * Created by Phumeh
  */
 
 const express = require('express');
 const auth = require('../middleware/auth');
+const { User, Post, Comment, Like, Follow } = require('../models');
+const { Op } = require('sequelize');
 
 const router = express.Router();
 
-// Demo posts storage
-const demoPosts = [
-  {
-    _id: 'post-1',
-    user: {
-      _id: 'user-1',
-      username: 'phumeh',
-      profilePicture: 'https://picsum.photos/150/150?random=100',
-      isVerified: true
-    },
-    media: [{ url: 'https://picsum.photos/600/600?random=1', type: 'image' }],
-    caption: 'Welcome to Instagram Clone! 🚀 Created by Phumeh',
-    likes: [],
-    comments: [],
-    createdAt: new Date().toISOString()
-  },
-  {
-    _id: 'post-2',
-    user: {
-      _id: 'user-2',
-      username: 'nature_lover',
-      profilePicture: 'https://picsum.photos/150/150?random=101',
-      isVerified: false
-    },
-    media: [{ url: 'https://picsum.photos/600/600?random=2', type: 'image' }],
-    caption: 'Beautiful sunset 🌅 #nature #photography',
-    likes: [{ user: 'user-1' }, { user: 'user-3' }],
-    comments: [
-      { _id: 'c1', user: { username: 'traveler' }, text: 'Amazing!', createdAt: new Date() }
-    ],
-    createdAt: new Date(Date.now() - 3600000).toISOString()
-  },
-  {
-    _id: 'post-3',
-    user: {
-      _id: 'user-3',
-      username: 'foodie_adventures',
-      profilePicture: 'https://picsum.photos/150/150?random=102',
-      isVerified: false
-    },
-    media: [{ url: 'https://picsum.photos/600/600?random=3', type: 'image' }],
-    caption: 'Delicious brunch today! 🥞 #food #yummy',
-    likes: [{ user: 'user-1' }],
-    comments: [],
-    createdAt: new Date(Date.now() - 7200000).toISOString()
-  },
-  {
-    _id: 'post-4',
-    user: {
-      _id: 'user-4',
-      username: 'tech_enthusiast',
-      profilePicture: 'https://picsum.photos/150/150?random=103',
-      isVerified: true
-    },
-    media: [{ url: 'https://picsum.photos/600/600?random=4', type: 'image' }],
-    caption: 'New setup complete! 💻 #tech #coding',
-    likes: [],
-    comments: [],
-    createdAt: new Date(Date.now() - 10800000).toISOString()
-  },
-  {
-    _id: 'post-5',
-    user: {
-      _id: 'user-5',
-      username: 'fitness_journey',
-      profilePicture: 'https://picsum.photos/150/150?random=104',
-      isVerified: false
-    },
-    media: [{ url: 'https://picsum.photos/600/600?random=5', type: 'image' }],
-    caption: 'Morning workout done! 💪 #fitness #motivation',
-    likes: [{ user: 'user-1' }, { user: 'user-2' }, { user: 'user-3' }],
-    comments: [],
-    createdAt: new Date(Date.now() - 14400000).toISOString()
-  }
-];
-
-// Get Post model safely
-const getPost = () => {
-  try {
-    const Post = require('../models/Post');
-    if (Post.db?.readyState === 1) return Post;
-    return null;
-  } catch (e) {
-    return null;
-  }
+// Helper function to format post for API response
+const formatPost = (post) => {
+  const postJson = post.toJSON ? post.toJSON() : post;
+  return {
+    _id: postJson.id,
+    id: postJson.id,
+    user: postJson.user ? {
+      _id: postJson.user.id,
+      id: postJson.user.id,
+      username: postJson.user.username,
+      profilePicture: postJson.user.profilePicture,
+      isVerified: postJson.user.isVerified
+    } : null,
+    media: postJson.media || [],
+    caption: postJson.caption,
+    type: postJson.type,
+    hashtags: postJson.hashtags || [],
+    location: postJson.locationName ? {
+      name: postJson.locationName,
+      lat: postJson.locationLat,
+      lng: postJson.locationLng
+    } : null,
+    likes: postJson.likes || [],
+    comments: (postJson.comments || []).map(c => ({
+      _id: c.id,
+      id: c.id,
+      user: c.user ? {
+        _id: c.user.id,
+        id: c.user.id,
+        username: c.user.username
+      } : null,
+      text: c.text,
+      createdAt: c.createdAt
+    })),
+    createdAt: postJson.createdAt
+  };
 };
 
 // Get all posts (feed)
 router.get('/', auth, async (req, res) => {
   try {
-    const Post = getPost();
-    
-    if (Post) {
-      const posts = await Post.find()
-        .populate('user', 'username profilePicture isVerified')
-        .populate('comments.user', 'username')
-        .sort({ createdAt: -1 });
-      return res.json(posts);
-    }
+    const posts = await Post.findAll({
+      include: [
+        { 
+          model: User, 
+          as: 'user', 
+          attributes: ['id', 'username', 'profilePicture', 'isVerified'] 
+        },
+        {
+          model: Comment,
+          as: 'comments',
+          include: [{ model: User, as: 'user', attributes: ['id', 'username'] }],
+          order: [['createdAt', 'ASC']]
+        },
+        {
+          model: Like,
+          as: 'likes',
+          attributes: ['id', 'userId']
+        }
+      ],
+      order: [['createdAt', 'DESC']]
+    });
 
-    // Demo mode
-    res.json(demoPosts);
+    const formattedPosts = posts.map(formatPost);
+    res.json(formattedPosts);
   } catch (error) {
     console.error('Get posts error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Get single post
+router.get('/:id', auth, async (req, res) => {
+  try {
+    const post = await Post.findByPk(req.params.id, {
+      include: [
+        { 
+          model: User, 
+          as: 'user', 
+          attributes: ['id', 'username', 'profilePicture', 'isVerified'] 
+        },
+        {
+          model: Comment,
+          as: 'comments',
+          include: [{ model: User, as: 'user', attributes: ['id', 'username'] }],
+          order: [['createdAt', 'ASC']]
+        },
+        {
+          model: Like,
+          as: 'likes',
+          attributes: ['id', 'userId']
+        }
+      ]
+    });
+
+    if (!post) {
+      return res.status(404).json({ message: 'Post not found' });
+    }
+
+    res.json(formatPost(post));
+  } catch (error) {
+    console.error('Get post error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });
@@ -121,41 +121,30 @@ router.post('/', auth, async (req, res) => {
   try {
     const { caption, media, type, hashtags, location } = req.body;
     
-    const Post = getPost();
+    const userId = req.user.id || req.user._id;
     
-    if (Post) {
-      const post = new Post({
-        user: req.user._id,
-        media: media || [],
-        type: type || 'photo',
-        caption: caption || '',
-        hashtags: hashtags || [],
-        location: location || null
-      });
-
-      await post.save();
-      await post.populate('user', 'username profilePicture');
-      return res.status(201).json(post);
-    }
-
-    // Demo mode
-    const newPost = {
-      _id: 'post-' + Date.now(),
-      user: {
-        _id: req.user._id || req.user.id,
-        username: req.user.username,
-        profilePicture: req.user.profilePicture,
-        isVerified: req.user.isVerified
-      },
-      media: media || [{ url: 'https://picsum.photos/600/600?random=' + Date.now(), type: 'image' }],
+    const post = await Post.create({
+      userId: userId,
+      media: media || [],
+      type: type || 'photo',
       caption: caption || '',
-      likes: [],
-      comments: [],
-      createdAt: new Date().toISOString()
-    };
+      hashtags: hashtags || [],
+      locationName: location?.name || null,
+      locationLat: location?.lat || null,
+      locationLng: location?.lng || null
+    });
 
-    demoPosts.unshift(newPost);
-    res.status(201).json(newPost);
+    const postWithUser = await Post.findByPk(post.id, {
+      include: [
+        { 
+          model: User, 
+          as: 'user', 
+          attributes: ['id', 'username', 'profilePicture', 'isVerified'] 
+        }
+      ]
+    });
+
+    res.status(201).json(formatPost(postWithUser));
   } catch (error) {
     console.error('Create post error:', error);
     res.status(500).json({ message: 'Server error' });
@@ -165,45 +154,31 @@ router.post('/', auth, async (req, res) => {
 // Like/Unlike post
 router.put('/:id/like', auth, async (req, res) => {
   try {
-    const Post = getPost();
+    const postId = parseInt(req.params.id);
+    const userId = req.user.id || req.user._id;
+
+    const post = await Post.findByPk(postId);
     
-    if (Post) {
-      const post = await Post.findById(req.params.id);
-      
-      if (!post) {
-        return res.status(404).json({ message: 'Post not found' });
-      }
-
-      const likeIndex = post.likes.findIndex(
-        like => like.user && like.user.toString() === req.user._id.toString()
-      );
-      
-      if (likeIndex > -1) {
-        post.likes.splice(likeIndex, 1);
-      } else {
-        post.likes.push({ user: req.user._id });
-      }
-
-      await post.save();
-      return res.json({ likes: post.likes.length, isLiked: likeIndex === -1 });
-    }
-
-    // Demo mode
-    const post = demoPosts.find(p => p._id === req.params.id);
     if (!post) {
       return res.status(404).json({ message: 'Post not found' });
     }
 
-    const userId = req.user._id || req.user.id;
-    const likeIndex = post.likes.findIndex(l => l.user === userId);
-    
-    if (likeIndex > -1) {
-      post.likes.splice(likeIndex, 1);
+    const existingLike = await Like.findOne({
+      where: { postId: postId, userId: userId }
+    });
+
+    let isLiked;
+    if (existingLike) {
+      await existingLike.destroy();
+      isLiked = false;
     } else {
-      post.likes.push({ user: userId });
+      await Like.create({ postId: postId, userId: userId });
+      isLiked = true;
     }
 
-    res.json({ likes: post.likes.length, isLiked: likeIndex === -1 });
+    const likeCount = await Like.count({ where: { postId: postId } });
+
+    res.json({ likes: likeCount, isLiked: isLiked });
   } catch (error) {
     console.error('Like post error:', error);
     res.status(500).json({ message: 'Server error' });
@@ -214,41 +189,65 @@ router.put('/:id/like', auth, async (req, res) => {
 router.post('/:id/comment', auth, async (req, res) => {
   try {
     const { text } = req.body;
+    const postId = parseInt(req.params.id);
+    const userId = req.user.id || req.user._id;
+
+    const post = await Post.findByPk(postId);
     
-    const Post = getPost();
-    
-    if (Post) {
-      const post = await Post.findById(req.params.id);
-      
-      if (!post) {
-        return res.status(404).json({ message: 'Post not found' });
-      }
-
-      const comment = { user: req.user._id, text };
-      post.comments.push(comment);
-      await post.save();
-      await post.populate('comments.user', 'username');
-
-      return res.json(post.comments[post.comments.length - 1]);
-    }
-
-    // Demo mode
-    const post = demoPosts.find(p => p._id === req.params.id);
     if (!post) {
       return res.status(404).json({ message: 'Post not found' });
     }
 
-    const newComment = {
-      _id: 'comment-' + Date.now(),
-      user: { _id: req.user._id || req.user.id, username: req.user.username },
-      text,
-      createdAt: new Date()
-    };
+    const comment = await Comment.create({
+      postId: postId,
+      userId: userId,
+      text: text
+    });
 
-    post.comments.push(newComment);
-    res.json(newComment);
+    const commentWithUser = await Comment.findByPk(comment.id, {
+      include: [{ model: User, as: 'user', attributes: ['id', 'username'] }]
+    });
+
+    res.json({
+      _id: commentWithUser.id,
+      id: commentWithUser.id,
+      user: {
+        _id: commentWithUser.user.id,
+        id: commentWithUser.user.id,
+        username: commentWithUser.user.username
+      },
+      text: commentWithUser.text,
+      createdAt: commentWithUser.createdAt
+    });
   } catch (error) {
     console.error('Comment error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Delete comment
+router.delete('/:postId/comment/:commentId', auth, async (req, res) => {
+  try {
+    const postId = parseInt(req.params.postId);
+    const commentId = parseInt(req.params.commentId);
+    const userId = req.user.id || req.user._id;
+
+    const comment = await Comment.findOne({
+      where: { id: commentId, postId: postId }
+    });
+
+    if (!comment) {
+      return res.status(404).json({ message: 'Comment not found' });
+    }
+
+    if (comment.userId !== userId) {
+      return res.status(403).json({ message: 'Not authorized' });
+    }
+
+    await comment.destroy();
+    res.json({ message: 'Comment deleted' });
+  } catch (error) {
+    console.error('Delete comment error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });
@@ -256,28 +255,23 @@ router.post('/:id/comment', auth, async (req, res) => {
 // Delete post
 router.delete('/:id', auth, async (req, res) => {
   try {
-    const Post = getPost();
+    const postId = parseInt(req.params.id);
+    const userId = req.user.id || req.user._id;
+
+    const post = await Post.findByPk(postId);
     
-    if (Post) {
-      const post = await Post.findById(req.params.id);
-      
-      if (!post) {
-        return res.status(404).json({ message: 'Post not found' });
-      }
-
-      if (post.user.toString() !== req.user._id.toString()) {
-        return res.status(403).json({ message: 'Not authorized' });
-      }
-
-      await Post.findByIdAndDelete(req.params.id);
-      return res.json({ message: 'Post deleted' });
+    if (!post) {
+      return res.status(404).json({ message: 'Post not found' });
     }
 
-    // Demo mode
-    const index = demoPosts.findIndex(p => p._id === req.params.id);
-    if (index > -1) {
-      demoPosts.splice(index, 1);
+    if (post.userId !== userId) {
+      return res.status(403).json({ message: 'Not authorized' });
     }
+
+    await Like.destroy({ where: { postId: postId } });
+    await Comment.destroy({ where: { postId: postId } });
+    await post.destroy();
+
     res.json({ message: 'Post deleted' });
   } catch (error) {
     console.error('Delete post error:', error);
@@ -288,20 +282,65 @@ router.delete('/:id', auth, async (req, res) => {
 // Save/Unsave post
 router.put('/:id/save', auth, async (req, res) => {
   try {
-    const isSaved = req.user.savedPosts?.includes(req.params.id);
+    const postId = parseInt(req.params.id);
+    const userId = req.user.id || req.user._id;
+
+    const user = await User.findByPk(userId);
     
-    if (isSaved) {
-      req.user.savedPosts = req.user.savedPosts.filter(p => p.toString() !== req.params.id);
-    } else {
-      if (!req.user.savedPosts) req.user.savedPosts = [];
-      req.user.savedPosts.push(req.params.id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
     }
 
-    if (req.user.save) await req.user.save();
+    const post = await Post.findByPk(postId);
+    
+    if (!post) {
+      return res.status(404).json({ message: 'Post not found' });
+    }
+
+    let savedPosts = user.savedPosts || [];
+    const isSaved = savedPosts.includes(postId);
+
+    if (isSaved) {
+      savedPosts = savedPosts.filter(p => p !== postId);
+    } else {
+      savedPosts.push(postId);
+    }
+
+    await user.update({ savedPosts: savedPosts });
 
     res.json({ isSaved: !isSaved, message: isSaved ? 'Post unsaved' : 'Post saved' });
   } catch (error) {
     console.error('Save post error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Get user's posts
+router.get('/user/:userId', auth, async (req, res) => {
+  try {
+    const userId = parseInt(req.params.userId);
+
+    const posts = await Post.findAll({
+      where: { userId: userId },
+      include: [
+        { 
+          model: User, 
+          as: 'user', 
+          attributes: ['id', 'username', 'profilePicture', 'isVerified'] 
+        },
+        {
+          model: Like,
+          as: 'likes',
+          attributes: ['id', 'userId']
+        }
+      ],
+      order: [['createdAt', 'DESC']]
+    });
+
+    const formattedPosts = posts.map(formatPost);
+    res.json(formattedPosts);
+  } catch (error) {
+    console.error('Get user posts error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });

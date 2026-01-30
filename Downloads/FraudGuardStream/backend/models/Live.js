@@ -1,80 +1,95 @@
 /*
- * Instagram Clone - Live Video Model
+ * Instagram Clone - Live Model (Sequelize)
  * Created by Phumeh
  */
 
-const mongoose = require('mongoose');
+const { DataTypes } = require('sequelize');
+const sequelize = require('../config/database');
 
-const liveSchema = new mongoose.Schema({
-  user: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true
+const Live = sequelize.define('Live', {
+  id: {
+    type: DataTypes.INTEGER,
+    primaryKey: true,
+    autoIncrement: true
+  },
+  userId: {
+    type: DataTypes.INTEGER,
+    allowNull: false
   },
   title: {
-    type: String,
-    maxlength: 100
+    type: DataTypes.STRING(100),
+    allowNull: true
   },
-  viewers: [{
-    user: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User'
-    },
-    joinedAt: {
-      type: Date,
-      default: Date.now
-    }
-  }],
+  streamKey: {
+    type: DataTypes.STRING,
+    allowNull: true
+  },
+  streamUrl: {
+    type: DataTypes.STRING,
+    allowNull: true
+  },
+  thumbnail: {
+    type: DataTypes.STRING,
+    allowNull: true
+  },
+  viewerCount: {
+    type: DataTypes.INTEGER,
+    defaultValue: 0
+  },
   peakViewers: {
-    type: Number,
-    default: 0
+    type: DataTypes.INTEGER,
+    defaultValue: 0
   },
-  comments: [{
-    user: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User'
-    },
-    text: String,
-    isPinned: {
-      type: Boolean,
-      default: false
-    },
-    createdAt: {
-      type: Date,
-      default: Date.now
-    }
-  }],
-  likes: [{
-    user: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User'
-    }
-  }],
-  guests: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
-  }],
-  isActive: {
-    type: Boolean,
-    default: true
+  status: {
+    type: DataTypes.ENUM('scheduled', 'live', 'ended'),
+    defaultValue: 'live'
+  },
+  scheduledFor: {
+    type: DataTypes.DATE,
+    allowNull: true
   },
   startedAt: {
-    type: Date,
-    default: Date.now
+    type: DataTypes.DATE,
+    allowNull: true
   },
-  endedAt: Date,
-  duration: Number,
-  savedVideo: {
-    url: String,
-    thumbnail: String
+  endedAt: {
+    type: DataTypes.DATE,
+    allowNull: true
   },
-  visibility: {
-    type: String,
-    enum: ['public', 'followers', 'close_friends'],
-    default: 'public'
+  audience: {
+    type: DataTypes.ENUM('public', 'followers', 'close_friends'),
+    defaultValue: 'public'
   }
 }, {
+  tableName: 'lives',
   timestamps: true
 });
 
-module.exports = mongoose.model('Live', liveSchema);
+const LiveViewer = sequelize.define('LiveViewer', {
+  id: {
+    type: DataTypes.INTEGER,
+    primaryKey: true,
+    autoIncrement: true
+  },
+  liveId: {
+    type: DataTypes.INTEGER,
+    allowNull: false
+  },
+  userId: {
+    type: DataTypes.INTEGER,
+    allowNull: false
+  },
+  joinedAt: {
+    type: DataTypes.DATE,
+    defaultValue: DataTypes.NOW
+  },
+  leftAt: {
+    type: DataTypes.DATE,
+    allowNull: true
+  }
+}, {
+  tableName: 'live_viewers',
+  timestamps: false
+});
+
+module.exports = { Live, LiveViewer };

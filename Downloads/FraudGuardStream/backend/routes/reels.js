@@ -6,7 +6,8 @@
 const express = require('express');
 const multer = require('multer');
 const cloudinary = require('cloudinary').v2;
-const Reel = require('../models/Reel');
+const { User, Reel, Like, Comment } = require('../models');
+const { Op } = require('sequelize');
 const auth = require('../middleware/auth');
 
 const router = express.Router();
@@ -29,25 +30,24 @@ router.post('/', auth, upload.single('video'), async (req, res) => {
       ]
     });
 
-    const reel = new Reel({
-      user: req.user._id,
-      video: {
-        url: result.secure_url,
-        thumbnail: result.eager[0].secure_url,
-        duration: result.duration
-      },
+    const reel = await Reel.create({
+      userId: req.user.id,
+      videoUrl: result.secure_url,
+      videoThumbnail: result.eager[0].secure_url,
+      videoDuration: result.duration,
       caption: caption || '',
       hashtags: hashtags ? JSON.parse(hashtags) : [],
       mentions: mentions ? JSON.parse(mentions) : [],
-      audio: audio ? JSON.parse(audio) : undefined,
+      audio: audio ? JSON.parse(audio) : null,
       effects: effects ? JSON.parse(effects) : [],
       audience: audience || 'public'
     });
 
-    await reel.save();
-    await reel.populate('user', 'username profilePicture isVerified');
+    const reelWithUser = await Reel.findByPk(reel.id, {
+      include: [{ model: User, as: 'user', attributes: ['id', 'username', 'profilePicture', 'isVerified'] }]
+    });
 
-    res.status(201).json(reel);
+    res.status(201).json(reelWithUser);
   } catch (error) {
     console.error('Create reel error:', error);
     res.status(500).json({ message: 'Server error' });
@@ -58,13 +58,15 @@ router.post('/', auth, upload.single('video'), async (req, res) => {
 router.get('/feed', auth, async (req, res) => {
   try {
     const { page = 1, limit = 10 } = req.query;
-    const skip = (page - 1) * limit;
+    const offset = (page - 1) * limit;
 
-    const reels = await Reel.find({ audience: 'public' })
-      .populate('user', 'username profilePicture isVerified')
-      .sort({ createdAt: -1, views: -1 }) // Sort by recent and popular
-      .skip(skip)
-      .limit(parseInt(limit));
+    const reels = await Reel.findAll({
+      where: { audience: 'public' },
+      include: [{ model: User, as: 'user', attributes: ['id', 'username', 'profilePicture', 'isVerified'] }],
+      order: [['createdAt', 'DESC'], ['views', 'DESC']],
+      offset,
+      limit: parseInt(limit)
+    });
 
     res.json(reels);
   } catch (error) {
@@ -78,13 +80,15 @@ router.get('/user/:userId', auth, async (req, res) => {
   try {
     const { userId } = req.params;
     const { page = 1, limit = 12 } = req.query;
-    const skip = (page - 1) * limit;
+    const offset = (page - 1) * limit;
 
-    const reels = await Reel.find({ user: userId })
-      .populate('user', 'username profilePicture isVerified')
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(parseInt(limit));
+    const reels = await Reel.findAll({
+      where: { userId },
+      include: [{ model: User, as: 'user', attributes: ['id', 'username', 'profilePicture', 'isVerified'] }],
+      order: [['createdAt', 'DESC']],
+      offset,
+      limit: parseInt(limit)
+    });
 
     res.json(reels);
   } catch (error) {
@@ -96,18 +100,24 @@ router.get('/user/:userId', auth, async (req, res) => {
 // Get single reel
 router.get('/:id', auth, async (req, res) => {
   try {
-    const reel = await Reel.findById(req.params.id)
-      .populate('user', 'username profilePicture isVerified')
-      .populate('comments.user', 'username profilePicture')
-      .populate('comments.replies.user', 'username profilePicture');
+    const reel = await Reel.findByPk(req.params.id, {
+      include: [
+        { model: User, as: 'user', attributes: ['id', 'username', 'profilePicture', 'isVerified'] },
+        { 
+          model: Comment, 
+          as: 'comments',
+          include: [{ model: User, as: 'user', attributes: ['id', 'username', 'profilePicture'] }]
+        },
+        { model: Like, as: 'likes' }
+      ]
+    });
 
     if (!reel) {
       return res.status(404).json({ message: 'Reel not found' });
     }
 
     // Increment view count
-    reel.views += 1;
-    await reel.save();
+    await reel.increment('views');
 
     res.json(reel);
   } catch (error) {
@@ -119,26 +129,25 @@ router.get('/:id', auth, async (req, res) => {
 // Like/Unlike reel
 router.put('/:id/like', auth, async (req, res) => {
   try {
-    const reel = await Reel.findById(req.params.id);
+    const reel = await Reel.findByPk(req.params.id);
     
     if (!reel) {
       return res.status(404).json({ message: 'Reel not found' });
     }
 
-    const isLiked = reel.likes.some(
-      like => like.user.toString() === req.user._id.toString()
-    );
+    const existingLike = await Like.findOne({
+      where: { userId: req.user.id, reelId: req.params.id }
+    });
 
-    if (isLiked) {
-      reel.likes = reel.likes.filter(
-        like => like.user.toString() !== req.user._id.toString()
-      );
+    if (existingLike) {
+      await existingLike.destroy();
+      const likeCount = await Like.count({ where: { reelId: req.params.id } });
+      res.json({ likes: likeCount, isLiked: false });
     } else {
-      reel.likes.push({ user: req.user._id });
+      await Like.create({ userId: req.user.id, reelId: req.params.id });
+      const likeCount = await Like.count({ where: { reelId: req.params.id } });
+      res.json({ likes: likeCount, isLiked: true });
     }
-
-    await reel.save();
-    res.json({ likes: reel.likes.length, isLiked: !isLiked });
   } catch (error) {
     console.error('Like reel error:', error);
     res.status(500).json({ message: 'Server error' });
@@ -149,7 +158,7 @@ router.put('/:id/like', auth, async (req, res) => {
 router.post('/:id/comment', auth, async (req, res) => {
   try {
     const { text } = req.body;
-    const reel = await Reel.findById(req.params.id);
+    const reel = await Reel.findByPk(req.params.id);
     
     if (!reel) {
       return res.status(404).json({ message: 'Reel not found' });
@@ -159,19 +168,17 @@ router.post('/:id/comment', auth, async (req, res) => {
       return res.status(403).json({ message: 'Comments are disabled for this reel' });
     }
 
-    const comment = {
-      user: req.user._id,
-      text,
-      likes: [],
-      replies: []
-    };
+    const comment = await Comment.create({
+      userId: req.user.id,
+      reelId: req.params.id,
+      text
+    });
 
-    reel.comments.push(comment);
-    await reel.save();
-    await reel.populate('comments.user', 'username profilePicture');
+    const commentWithUser = await Comment.findByPk(comment.id, {
+      include: [{ model: User, as: 'user', attributes: ['id', 'username', 'profilePicture'] }]
+    });
 
-    const newComment = reel.comments[reel.comments.length - 1];
-    res.json(newComment);
+    res.json(commentWithUser);
   } catch (error) {
     console.error('Comment on reel error:', error);
     res.status(500).json({ message: 'Server error' });
@@ -181,22 +188,15 @@ router.post('/:id/comment', auth, async (req, res) => {
 // Share reel
 router.post('/:id/share', auth, async (req, res) => {
   try {
-    const reel = await Reel.findById(req.params.id);
+    const reel = await Reel.findByPk(req.params.id);
     
     if (!reel) {
       return res.status(404).json({ message: 'Reel not found' });
     }
 
-    const alreadyShared = reel.shares.some(
-      share => share.user.toString() === req.user._id.toString()
-    );
+    await reel.increment('shares');
 
-    if (!alreadyShared) {
-      reel.shares.push({ user: req.user._id });
-      await reel.save();
-    }
-
-    res.json({ message: 'Reel shared', shares: reel.shares.length });
+    res.json({ message: 'Reel shared', shares: reel.shares + 1 });
   } catch (error) {
     console.error('Share reel error:', error);
     res.status(500).json({ message: 'Server error' });
@@ -206,7 +206,9 @@ router.post('/:id/share', auth, async (req, res) => {
 // Create remix/duet
 router.post('/:id/remix', auth, upload.single('video'), async (req, res) => {
   try {
-    const originalReel = await Reel.findById(req.params.id);
+    const originalReel = await Reel.findByPk(req.params.id, {
+      include: [{ model: User, as: 'user', attributes: ['username'] }]
+    });
     
     if (!originalReel) {
       return res.status(404).json({ message: 'Original reel not found' });
@@ -226,31 +228,24 @@ router.post('/:id/remix', auth, upload.single('video'), async (req, res) => {
 
     const { caption, hashtags } = req.body;
 
-    const remixReel = new Reel({
-      user: req.user._id,
-      video: {
-        url: result.secure_url,
-        thumbnail: result.eager[0].secure_url,
-        duration: result.duration
-      },
+    const remixReel = await Reel.create({
+      userId: req.user.id,
+      videoUrl: result.secure_url,
+      videoThumbnail: result.eager[0].secure_url,
+      videoDuration: result.duration,
       caption: caption || `Remix of @${originalReel.user.username}'s reel`,
       hashtags: hashtags ? JSON.parse(hashtags) : [],
-      audio: originalReel.audio, // Use original audio
+      audio: originalReel.audio,
       isOriginalAudio: false,
-      audience: 'public'
+      audience: 'public',
+      originalReelId: originalReel.id
     });
 
-    await remixReel.save();
-
-    // Add to original reel's remixes
-    originalReel.remixes.push({
-      user: req.user._id,
-      reel: remixReel._id
+    const remixWithUser = await Reel.findByPk(remixReel.id, {
+      include: [{ model: User, as: 'user', attributes: ['id', 'username', 'profilePicture', 'isVerified'] }]
     });
-    await originalReel.save();
 
-    await remixReel.populate('user', 'username profilePicture isVerified');
-    res.status(201).json(remixReel);
+    res.status(201).json(remixWithUser);
   } catch (error) {
     console.error('Create remix error:', error);
     res.status(500).json({ message: 'Server error' });
@@ -260,19 +255,19 @@ router.post('/:id/remix', auth, upload.single('video'), async (req, res) => {
 // Get trending audio
 router.get('/audio/trending', auth, async (req, res) => {
   try {
-    const trendingAudio = await Reel.aggregate([
-      { $match: { 'audio.title': { $exists: true } } },
-      {
-        $group: {
-          _id: '$audio.title',
-          count: { $sum: 1 },
-          audio: { $first: '$audio' },
-          recentReel: { $first: '$_id' }
-        }
+    const { sequelize } = require('../models');
+    const trendingAudio = await Reel.findAll({
+      where: {
+        audio: { [Op.ne]: null }
       },
-      { $sort: { count: -1 } },
-      { $limit: 20 }
-    ]);
+      attributes: [
+        'audio',
+        [sequelize.fn('COUNT', sequelize.col('id')), 'count']
+      ],
+      group: ['audio'],
+      order: [[sequelize.literal('count'), 'DESC']],
+      limit: 20
+    });
 
     res.json(trendingAudio);
   } catch (error) {
@@ -284,17 +279,17 @@ router.get('/audio/trending', auth, async (req, res) => {
 // Delete reel
 router.delete('/:id', auth, async (req, res) => {
   try {
-    const reel = await Reel.findById(req.params.id);
+    const reel = await Reel.findByPk(req.params.id);
     
     if (!reel) {
       return res.status(404).json({ message: 'Reel not found' });
     }
 
-    if (reel.user.toString() !== req.user._id.toString()) {
+    if (reel.userId !== req.user.id) {
       return res.status(403).json({ message: 'Not authorized' });
     }
 
-    await Reel.findByIdAndDelete(req.params.id);
+    await reel.destroy();
     res.json({ message: 'Reel deleted' });
   } catch (error) {
     console.error('Delete reel error:', error);
@@ -305,13 +300,13 @@ router.delete('/:id', auth, async (req, res) => {
 // Toggle comments on reel
 router.put('/:id/comments/toggle', auth, async (req, res) => {
   try {
-    const reel = await Reel.findById(req.params.id);
+    const reel = await Reel.findByPk(req.params.id);
     
     if (!reel) {
       return res.status(404).json({ message: 'Reel not found' });
     }
 
-    if (reel.user.toString() !== req.user._id.toString()) {
+    if (reel.userId !== req.user.id) {
       return res.status(403).json({ message: 'Not authorized' });
     }
 

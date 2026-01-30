@@ -1,39 +1,51 @@
 /*
- * Instagram Clone - Highlight Model
- * Cloned by Phumeh
+ * Instagram Clone - Highlight Model (Sequelize)
+ * Created by Phumeh
  */
 
-const mongoose = require('mongoose');
+const { DataTypes } = require('sequelize');
+const sequelize = require('../config/database');
 
-const highlightSchema = new mongoose.Schema({
-  user: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true
+const Highlight = sequelize.define('Highlight', {
+  id: {
+    type: DataTypes.INTEGER,
+    primaryKey: true,
+    autoIncrement: true
+  },
+  userId: {
+    type: DataTypes.INTEGER,
+    allowNull: false
   },
   title: {
-    type: String,
-    required: true,
-    maxlength: 50
+    type: DataTypes.STRING(50),
+    allowNull: false
   },
   coverImage: {
-    type: String,
-    required: true
-  },
-  stories: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Story'
-  }],
-  isActive: {
-    type: Boolean,
-    default: true
-  },
-  order: {
-    type: Number,
-    default: 0
+    type: DataTypes.STRING,
+    allowNull: true
   }
 }, {
+  tableName: 'highlights',
   timestamps: true
 });
 
-module.exports = mongoose.model('Highlight', highlightSchema);
+const HighlightStory = sequelize.define('HighlightStory', {
+  id: {
+    type: DataTypes.INTEGER,
+    primaryKey: true,
+    autoIncrement: true
+  },
+  highlightId: {
+    type: DataTypes.INTEGER,
+    allowNull: false
+  },
+  storyId: {
+    type: DataTypes.INTEGER,
+    allowNull: false
+  }
+}, {
+  tableName: 'highlight_stories',
+  timestamps: true
+});
+
+module.exports = { Highlight, HighlightStory };

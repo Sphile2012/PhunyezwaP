@@ -1,10 +1,9 @@
 /*
- * Instagram Clone - Full-Featured Server
+ * Instagram Clone - Full-Featured Server (SQLite/Sequelize)
  * Created by Phumeh
  */
 
 const express = require('express');
-const mongoose = require('mongoose');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const helmet = require('helmet');
@@ -17,6 +16,9 @@ dotenv.config();
 
 const app = express();
 const server = createServer(app);
+
+// Import database and models
+const { sequelize } = require('./models');
 
 // Socket.IO setup
 const io = new Server(server, {
@@ -77,6 +79,7 @@ app.get('/api/health', (req, res) => {
   res.json({ 
     message: 'Instagram Clone API - Created by Phumeh',
     status: 'healthy',
+    database: 'SQLite with Sequelize',
     timestamp: new Date().toISOString(),
     version: '2.0.0',
     features: [
@@ -146,18 +149,37 @@ io.on('connection', (socket) => {
   });
 });
 
-// MongoDB connection
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/instagram-clone';
+// Sync database and start server
+const PORT = process.env.PORT || 5000;
 
-mongoose.connect(MONGODB_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-})
-.then(() => console.log('🚀 MongoDB connected - Instagram Clone by Phumeh'))
-.catch(err => {
-  console.log('⚠️ MongoDB connection failed, running in demo mode');
-  console.log('   To use full features, set MONGODB_URI in .env');
-});
+sequelize.sync({ alter: true })
+  .then(() => {
+    console.log('🗄️  SQLite database synced successfully');
+    server.listen(PORT, () => {
+      console.log(`\n🚀 Instagram Clone Server running on port ${PORT}`);
+      console.log(`📱 Created by Phumeh`);
+      console.log(`🗄️  Database: SQLite with Sequelize`);
+      console.log(`🌐 Environment: ${process.env.NODE_ENV || 'development'}`);
+      console.log(`\n📡 API Endpoints:`);
+      console.log(`   - Auth:          /api/auth`);
+      console.log(`   - Posts:         /api/posts`);
+      console.log(`   - Users:         /api/users`);
+      console.log(`   - Stories:       /api/stories`);
+      console.log(`   - Reels:         /api/reels`);
+      console.log(`   - Live:          /api/live`);
+      console.log(`   - Messages:      /api/messages`);
+      console.log(`   - Notifications: /api/notifications`);
+      console.log(`   - Search:        /api/search`);
+      console.log(`   - Collections:   /api/collections`);
+      console.log(`   - Reports:       /api/reports`);
+      console.log(`   - Follow:        /api/follow`);
+      console.log(`   - Health:        /api/health\n`);
+    });
+  })
+  .catch(err => {
+    console.error('❌ Database sync failed:', err);
+    process.exit(1);
+  });
 
 // Error handling middleware
 app.use((error, req, res, next) => {
@@ -171,25 +193,4 @@ app.use((error, req, res, next) => {
 // 404 handler
 app.use('*', (req, res) => {
   res.status(404).json({ message: 'Route not found' });
-});
-
-const PORT = process.env.PORT || 5000;
-server.listen(PORT, () => {
-  console.log(`\n🚀 Instagram Clone Server running on port ${PORT}`);
-  console.log(`📱 Created by Phumeh`);
-  console.log(`🌐 Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`\n📡 API Endpoints:`);
-  console.log(`   - Auth:          /api/auth`);
-  console.log(`   - Posts:         /api/posts`);
-  console.log(`   - Users:         /api/users`);
-  console.log(`   - Stories:       /api/stories`);
-  console.log(`   - Reels:         /api/reels`);
-  console.log(`   - Live:          /api/live`);
-  console.log(`   - Messages:      /api/messages`);
-  console.log(`   - Notifications: /api/notifications`);
-  console.log(`   - Search:        /api/search`);
-  console.log(`   - Collections:   /api/collections`);
-  console.log(`   - Reports:       /api/reports`);
-  console.log(`   - Follow:        /api/follow`);
-  console.log(`   - Health:        /api/health\n`);
 });

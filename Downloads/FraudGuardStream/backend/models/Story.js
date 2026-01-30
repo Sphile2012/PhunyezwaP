@@ -1,109 +1,95 @@
 /*
- * Instagram Clone - Story Model
- * Cloned by Phumeh
+ * Instagram Clone - Story Model (Sequelize)
+ * Created by Phumeh
  */
 
-const mongoose = require('mongoose');
+const { DataTypes } = require('sequelize');
+const sequelize = require('../config/database');
 
-const storySchema = new mongoose.Schema({
-  user: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true
+const Story = sequelize.define('Story', {
+  id: {
+    type: DataTypes.INTEGER,
+    primaryKey: true,
+    autoIncrement: true
+  },
+  userId: {
+    type: DataTypes.INTEGER,
+    allowNull: false
   },
   type: {
-    type: String,
-    enum: ['photo', 'video'],
-    required: true
+    type: DataTypes.ENUM('image', 'video'),
+    defaultValue: 'image'
   },
-  media: {
-    url: {
-      type: String,
-      required: true
-    },
-    thumbnail: String
+  mediaUrl: {
+    type: DataTypes.STRING,
+    allowNull: false
   },
-  text: {
-    content: String,
-    color: String,
-    font: String,
-    size: Number,
-    position: {
-      x: Number,
-      y: Number
-    }
+  thumbnail: {
+    type: DataTypes.STRING,
+    allowNull: true
   },
-  stickers: [{
-    type: {
-      type: String,
-      enum: ['poll', 'question', 'quiz', 'countdown', 'music', 'location', 'mention', 'hashtag']
-    },
-    content: mongoose.Schema.Types.Mixed,
-    position: {
-      x: Number,
-      y: Number
-    }
-  }],
+  duration: {
+    type: DataTypes.INTEGER,
+    defaultValue: 5
+  },
+  caption: {
+    type: DataTypes.STRING(500),
+    allowNull: true
+  },
   music: {
-    title: String,
-    artist: String,
-    url: String,
-    startTime: Number,
-    duration: Number
+    type: DataTypes.JSON,
+    allowNull: true
   },
-  views: [{
-    user: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User'
-    },
-    viewedAt: {
-      type: Date,
-      default: Date.now
-    }
-  }],
-  likes: [{
-    user: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User'
-    },
-    createdAt: {
-      type: Date,
-      default: Date.now
-    }
-  }],
-  replies: [{
-    user: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User'
-    },
-    message: String,
-    createdAt: {
-      type: Date,
-      default: Date.now
-    }
-  }],
+  stickers: {
+    type: DataTypes.JSON,
+    defaultValue: []
+  },
+  mentions: {
+    type: DataTypes.JSON,
+    defaultValue: []
+  },
+  hashtags: {
+    type: DataTypes.JSON,
+    defaultValue: []
+  },
+  locationName: {
+    type: DataTypes.STRING,
+    allowNull: true
+  },
   audience: {
-    type: String,
-    enum: ['public', 'followers', 'close_friends'],
-    default: 'followers'
+    type: DataTypes.ENUM('public', 'followers', 'close_friends'),
+    defaultValue: 'followers'
   },
-  isHighlighted: {
-    type: Boolean,
-    default: false
-  },
-  highlightCategory: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Highlight'
+  isHighlight: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false
   },
   expiresAt: {
-    type: Date,
-    default: () => new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 hours
+    type: DataTypes.DATE,
+    allowNull: false
   }
 }, {
+  tableName: 'stories',
   timestamps: true
 });
 
-// Auto-delete expired stories
-storySchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
+const StoryView = sequelize.define('StoryView', {
+  id: {
+    type: DataTypes.INTEGER,
+    primaryKey: true,
+    autoIncrement: true
+  },
+  storyId: {
+    type: DataTypes.INTEGER,
+    allowNull: false
+  },
+  userId: {
+    type: DataTypes.INTEGER,
+    allowNull: false
+  }
+}, {
+  tableName: 'story_views',
+  timestamps: true
+});
 
-module.exports = mongoose.model('Story', storySchema);
+module.exports = { Story, StoryView };

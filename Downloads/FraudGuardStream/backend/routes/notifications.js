@@ -4,8 +4,7 @@
  */
 
 const express = require('express');
-const Notification = require('../models/Notification');
-const User = require('../models/User');
+const { User, Notification } = require('../models');
 const auth = require('../middleware/auth');
 
 const router = express.Router();
@@ -14,26 +13,27 @@ const router = express.Router();
 router.get('/', auth, async (req, res) => {
   try {
     const { page = 1, limit = 50, type } = req.query;
-    const skip = (page - 1) * limit;
+    const offset = (page - 1) * limit;
 
-    let query = { recipient: req.user._id };
+    const where = { recipientId: req.user.id };
     if (type) {
-      query.type = type;
+      where.type = type;
     }
 
-    const notifications = await Notification.find(query)
-      .populate('sender', 'username fullName profilePicture isVerified')
-      .populate('content.post', 'media')
-      .populate('content.reel', 'video')
-      .populate('content.story', 'media')
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(parseInt(limit));
+    const notifications = await Notification.findAll({
+      where,
+      include: [
+        { model: User, as: 'sender', attributes: ['id', 'username', 'fullName', 'profilePicture', 'isVerified'] }
+      ],
+      order: [['createdAt', 'DESC']],
+      offset,
+      limit: parseInt(limit)
+    });
 
     // Mark notifications as read when fetched
-    await Notification.updateMany(
-      { recipient: req.user._id, isRead: false },
-      { isRead: true, readAt: new Date() }
+    await Notification.update(
+      { isRead: true, readAt: new Date() },
+      { where: { recipientId: req.user.id, isRead: false } }
     );
 
     res.json(notifications);
@@ -46,9 +46,11 @@ router.get('/', auth, async (req, res) => {
 // Get unread notification count
 router.get('/unread-count', auth, async (req, res) => {
   try {
-    const count = await Notification.countDocuments({
-      recipient: req.user._id,
-      isRead: false
+    const count = await Notification.count({
+      where: {
+        recipientId: req.user.id,
+        isRead: false
+      }
     });
 
     res.json({ count });
@@ -61,13 +63,15 @@ router.get('/unread-count', auth, async (req, res) => {
 // Mark notification as read
 router.put('/:id/read', auth, async (req, res) => {
   try {
-    const notification = await Notification.findOneAndUpdate(
-      { _id: req.params.id, recipient: req.user._id },
+    const [updatedCount, [notification]] = await Notification.update(
       { isRead: true, readAt: new Date() },
-      { new: true }
+      { 
+        where: { id: req.params.id, recipientId: req.user.id },
+        returning: true
+      }
     );
 
-    if (!notification) {
+    if (updatedCount === 0) {
       return res.status(404).json({ message: 'Notification not found' });
     }
 
@@ -81,9 +85,9 @@ router.put('/:id/read', auth, async (req, res) => {
 // Mark all notifications as read
 router.put('/read-all', auth, async (req, res) => {
   try {
-    await Notification.updateMany(
-      { recipient: req.user._id, isRead: false },
-      { isRead: true, readAt: new Date() }
+    await Notification.update(
+      { isRead: true, readAt: new Date() },
+      { where: { recipientId: req.user.id, isRead: false } }
     );
 
     res.json({ message: 'All notifications marked as read' });
@@ -96,12 +100,11 @@ router.put('/read-all', auth, async (req, res) => {
 // Delete notification
 router.delete('/:id', auth, async (req, res) => {
   try {
-    const notification = await Notification.findOneAndDelete({
-      _id: req.params.id,
-      recipient: req.user._id
+    const deletedCount = await Notification.destroy({
+      where: { id: req.params.id, recipientId: req.user.id }
     });
 
-    if (!notification) {
+    if (deletedCount === 0) {
       return res.status(404).json({ message: 'Notification not found' });
     }
 
@@ -116,25 +119,24 @@ router.delete('/:id', auth, async (req, res) => {
 const createNotification = async (recipientId, senderId, type, content = {}, message = '') => {
   try {
     // Don't send notification to self
-    if (recipientId.toString() === senderId.toString()) {
+    if (recipientId === senderId) {
       return;
     }
 
     // Check if recipient allows this type of notification
-    const recipient = await User.findById(recipientId);
+    const recipient = await User.findByPk(recipientId);
     if (!recipient || !recipient.isActive) {
       return;
     }
 
-    const notification = new Notification({
-      recipient: recipientId,
-      sender: senderId,
+    const notification = await Notification.create({
+      recipientId,
+      senderId,
       type,
       content,
       message
     });
 
-    await notification.save();
     return notification;
   } catch (error) {
     console.error('Create notification error:', error);
@@ -144,7 +146,9 @@ const createNotification = async (recipientId, senderId, type, content = {}, mes
 // Notification settings
 router.get('/settings', auth, async (req, res) => {
   try {
-    const user = await User.findById(req.user._id).select('notificationSettings');
+    const user = await User.findByPk(req.user.id, {
+      attributes: ['notificationSettings']
+    });
     
     const defaultSettings = {
       likes: true,
@@ -158,7 +162,7 @@ router.get('/settings', auth, async (req, res) => {
       pushNotifications: true
     };
 
-    res.json(user.notificationSettings || defaultSettings);
+    res.json(user?.notificationSettings || defaultSettings);
   } catch (error) {
     console.error('Get notification settings error:', error);
     res.status(500).json({ message: 'Server error' });
@@ -170,10 +174,9 @@ router.put('/settings', auth, async (req, res) => {
   try {
     const settings = req.body;
     
-    await User.findByIdAndUpdate(
-      req.user._id,
+    await User.update(
       { notificationSettings: settings },
-      { new: true }
+      { where: { id: req.user.id } }
     );
 
     res.json({ message: 'Notification settings updated', settings });

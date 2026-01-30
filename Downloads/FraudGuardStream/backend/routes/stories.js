@@ -1,121 +1,58 @@
 /*
- * Instagram Clone - Stories Routes
+ * Instagram Clone - Stories Routes (Sequelize)
  * Created by Phumeh
  */
 
 const express = require('express');
 const auth = require('../middleware/auth');
+const { User, Story, StoryView, Follow } = require('../models');
+const { Op } = require('sequelize');
 
 const router = express.Router();
-
-// Demo stories storage
-const demoStories = [
-  {
-    _id: 'story-1',
-    user: {
-      _id: 'user-1',
-      username: 'phumeh',
-      profilePicture: 'https://picsum.photos/150/150?random=200',
-      isVerified: true
-    },
-    stories: [
-      {
-        _id: 'story-1-1',
-        type: 'photo',
-        media: { url: 'https://picsum.photos/400/700?random=10', thumbnail: 'https://picsum.photos/400/700?random=10' },
-        createdAt: new Date().toISOString(),
-        views: [],
-        likes: []
-      }
-    ]
-  },
-  {
-    _id: 'story-2',
-    user: {
-      _id: 'user-2',
-      username: 'travel_pics',
-      profilePicture: 'https://picsum.photos/150/150?random=201',
-      isVerified: false
-    },
-    stories: [
-      {
-        _id: 'story-2-1',
-        type: 'photo',
-        media: { url: 'https://picsum.photos/400/700?random=11', thumbnail: 'https://picsum.photos/400/700?random=11' },
-        createdAt: new Date(Date.now() - 3600000).toISOString(),
-        views: [],
-        likes: []
-      }
-    ]
-  },
-  {
-    _id: 'story-3',
-    user: {
-      _id: 'user-3',
-      username: 'daily_life',
-      profilePicture: 'https://picsum.photos/150/150?random=202',
-      isVerified: false
-    },
-    stories: [
-      {
-        _id: 'story-3-1',
-        type: 'photo',
-        media: { url: 'https://picsum.photos/400/700?random=12', thumbnail: 'https://picsum.photos/400/700?random=12' },
-        createdAt: new Date(Date.now() - 7200000).toISOString(),
-        views: [],
-        likes: []
-      }
-    ]
-  }
-];
-
-// Get Story model safely
-const getStory = () => {
-  try {
-    const Story = require('../models/Story');
-    if (Story.db?.readyState === 1) return Story;
-    return null;
-  } catch (e) {
-    return null;
-  }
-};
 
 // Get stories feed
 router.get('/feed', auth, async (req, res) => {
   try {
-    const Story = getStory();
-    
-    if (Story) {
-      const user = req.user;
-      const following = user.following || [];
-      
-      const stories = await Story.find({
-        $or: [
-          { user: { $in: [...following, user._id] } },
+    const userId = req.user.id;
+
+    // Get users the current user follows
+    const follows = await Follow.findAll({
+      where: { followerId: userId },
+      attributes: ['followingId']
+    });
+    const followingIds = follows.map(f => f.followingId);
+
+    // Get stories from followed users, own stories, and public stories
+    const stories = await Story.findAll({
+      where: {
+        [Op.or]: [
+          { userId: { [Op.in]: [...followingIds, userId] } },
           { audience: 'public' }
         ],
-        expiresAt: { $gt: new Date() }
-      })
-      .populate('user', 'username profilePicture isVerified')
-      .sort({ createdAt: -1 });
+        expiresAt: { [Op.gt]: new Date() }
+      },
+      include: [{
+        model: User,
+        as: 'user',
+        attributes: ['id', 'username', 'profilePicture', 'isVerified']
+      }],
+      order: [['createdAt', 'DESC']]
+    });
 
-      const groupedStories = {};
-      stories.forEach(story => {
-        const userId = story.user._id.toString();
-        if (!groupedStories[userId]) {
-          groupedStories[userId] = {
-            user: story.user,
-            stories: []
-          };
-        }
-        groupedStories[userId].stories.push(story);
-      });
+    // Group stories by user
+    const groupedStories = {};
+    stories.forEach(story => {
+      const storyUserId = story.userId.toString();
+      if (!groupedStories[storyUserId]) {
+        groupedStories[storyUserId] = {
+          user: story.user,
+          stories: []
+        };
+      }
+      groupedStories[storyUserId].stories.push(story);
+    });
 
-      return res.json(Object.values(groupedStories));
-    }
-
-    // Demo mode
-    res.json(demoStories);
+    res.json(Object.values(groupedStories));
   } catch (error) {
     console.error('Get stories feed error:', error);
     res.status(500).json({ message: 'Server error' });
@@ -126,54 +63,28 @@ router.get('/feed', auth, async (req, res) => {
 router.post('/', auth, async (req, res) => {
   try {
     const { type, media, text, stickers, music, audience } = req.body;
-    
-    const Story = getStory();
-    
-    if (Story) {
-      const story = new Story({
-        user: req.user._id,
-        type: type || 'photo',
-        media,
-        text: text || undefined,
-        stickers: stickers || [],
-        music: music || undefined,
-        audience: audience || 'followers'
-      });
 
-      await story.save();
-      await story.populate('user', 'username profilePicture');
-      return res.status(201).json(story);
-    }
+    const story = await Story.create({
+      userId: req.user.id,
+      type: type === 'photo' ? 'image' : (type || 'image'),
+      mediaUrl: media?.url || media,
+      thumbnail: media?.thumbnail || null,
+      caption: text || null,
+      stickers: stickers || [],
+      music: music || null,
+      audience: audience || 'followers',
+      expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000)
+    });
 
-    // Demo mode
-    const newStory = {
-      _id: 'story-' + Date.now(),
-      user: {
-        _id: req.user._id || req.user.id,
-        username: req.user.username,
-        profilePicture: req.user.profilePicture,
-        isVerified: req.user.isVerified
-      },
-      type: type || 'photo',
-      media: media || { url: 'https://picsum.photos/400/700?random=' + Date.now() },
-      createdAt: new Date().toISOString(),
-      expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-      views: [],
-      likes: []
-    };
+    const storyWithUser = await Story.findByPk(story.id, {
+      include: [{
+        model: User,
+        as: 'user',
+        attributes: ['id', 'username', 'profilePicture', 'isVerified']
+      }]
+    });
 
-    // Add to demo stories
-    const existingUser = demoStories.find(s => s.user.username === req.user.username);
-    if (existingUser) {
-      existingUser.stories.unshift(newStory);
-    } else {
-      demoStories.unshift({
-        user: newStory.user,
-        stories: [newStory]
-      });
-    }
-
-    res.status(201).json(newStory);
+    res.status(201).json(storyWithUser);
   } catch (error) {
     console.error('Create story error:', error);
     res.status(500).json({ message: 'Server error' });
@@ -183,28 +94,27 @@ router.post('/', auth, async (req, res) => {
 // View story
 router.put('/:id/view', auth, async (req, res) => {
   try {
-    const Story = getStory();
-    
-    if (Story) {
-      const story = await Story.findById(req.params.id);
-      
-      if (!story) {
-        return res.status(404).json({ message: 'Story not found' });
-      }
+    const story = await Story.findByPk(req.params.id);
 
-      const alreadyViewed = story.views.some(
-        view => view.user.toString() === req.user._id.toString()
-      );
-
-      if (!alreadyViewed) {
-        story.views.push({ user: req.user._id });
-        await story.save();
-      }
-
-      return res.json({ message: 'Story viewed' });
+    if (!story) {
+      return res.status(404).json({ message: 'Story not found' });
     }
 
-    // Demo mode
+    // Check if already viewed
+    const existingView = await StoryView.findOne({
+      where: {
+        storyId: req.params.id,
+        userId: req.user.id
+      }
+    });
+
+    if (!existingView) {
+      await StoryView.create({
+        storyId: req.params.id,
+        userId: req.user.id
+      });
+    }
+
     res.json({ message: 'Story viewed' });
   } catch (error) {
     console.error('View story error:', error);
@@ -212,36 +122,38 @@ router.put('/:id/view', auth, async (req, res) => {
   }
 });
 
-// Like story
+// Like story (using StoryView with a like flag or separate table)
 router.put('/:id/like', auth, async (req, res) => {
   try {
-    const Story = getStory();
-    
-    if (Story) {
-      const story = await Story.findById(req.params.id);
-      
-      if (!story) {
-        return res.status(404).json({ message: 'Story not found' });
-      }
+    const story = await Story.findByPk(req.params.id);
 
-      const isLiked = story.likes.some(
-        like => like.user.toString() === req.user._id.toString()
-      );
-
-      if (isLiked) {
-        story.likes = story.likes.filter(
-          like => like.user.toString() !== req.user._id.toString()
-        );
-      } else {
-        story.likes.push({ user: req.user._id });
-      }
-
-      await story.save();
-      return res.json({ likes: story.likes.length, isLiked: !isLiked });
+    if (!story) {
+      return res.status(404).json({ message: 'Story not found' });
     }
 
-    // Demo mode
-    res.json({ likes: 1, isLiked: true });
+    // For now, toggle view as "like" since there's no separate StoryLike model
+    // You may want to add a StoryLike model for proper implementation
+    const existingView = await StoryView.findOne({
+      where: {
+        storyId: req.params.id,
+        userId: req.user.id
+      }
+    });
+
+    let isLiked = false;
+    if (!existingView) {
+      await StoryView.create({
+        storyId: req.params.id,
+        userId: req.user.id
+      });
+      isLiked = true;
+    }
+
+    const likesCount = await StoryView.count({
+      where: { storyId: req.params.id }
+    });
+
+    res.json({ likes: likesCount, isLiked });
   } catch (error) {
     console.error('Like story error:', error);
     res.status(500).json({ message: 'Server error' });
@@ -251,24 +163,23 @@ router.put('/:id/like', auth, async (req, res) => {
 // Delete story
 router.delete('/:id', auth, async (req, res) => {
   try {
-    const Story = getStory();
-    
-    if (Story) {
-      const story = await Story.findById(req.params.id);
-      
-      if (!story) {
-        return res.status(404).json({ message: 'Story not found' });
-      }
+    const story = await Story.findByPk(req.params.id);
 
-      if (story.user.toString() !== req.user._id.toString()) {
-        return res.status(403).json({ message: 'Not authorized' });
-      }
-
-      await Story.findByIdAndDelete(req.params.id);
-      return res.json({ message: 'Story deleted' });
+    if (!story) {
+      return res.status(404).json({ message: 'Story not found' });
     }
 
-    // Demo mode
+    if (story.userId !== req.user.id) {
+      return res.status(403).json({ message: 'Not authorized' });
+    }
+
+    // Delete associated views first
+    await StoryView.destroy({
+      where: { storyId: req.params.id }
+    });
+
+    await story.destroy();
+
     res.json({ message: 'Story deleted' });
   } catch (error) {
     console.error('Delete story error:', error);
@@ -279,22 +190,20 @@ router.delete('/:id', auth, async (req, res) => {
 // Get user's stories
 router.get('/user/:userId', auth, async (req, res) => {
   try {
-    const Story = getStory();
-    
-    if (Story) {
-      const stories = await Story.find({
-        user: req.params.userId,
-        expiresAt: { $gt: new Date() }
-      })
-      .populate('user', 'username profilePicture isVerified')
-      .sort({ createdAt: 1 });
+    const stories = await Story.findAll({
+      where: {
+        userId: req.params.userId,
+        expiresAt: { [Op.gt]: new Date() }
+      },
+      include: [{
+        model: User,
+        as: 'user',
+        attributes: ['id', 'username', 'profilePicture', 'isVerified']
+      }],
+      order: [['createdAt', 'ASC']]
+    });
 
-      return res.json(stories);
-    }
-
-    // Demo mode
-    const userStories = demoStories.find(s => s.user._id === req.params.userId);
-    res.json(userStories ? userStories.stories : []);
+    res.json(stories);
   } catch (error) {
     console.error('Get user stories error:', error);
     res.status(500).json({ message: 'Server error' });

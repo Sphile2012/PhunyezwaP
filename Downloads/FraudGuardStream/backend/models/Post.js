@@ -1,138 +1,72 @@
 /*
- * Instagram Clone - Post Model
- * Cloned by Phumeh
+ * Instagram Clone - Post Model (Sequelize)
+ * Created by Phumeh
  */
 
-const mongoose = require('mongoose');
+const { DataTypes } = require('sequelize');
+const sequelize = require('../config/database');
 
-const postSchema = new mongoose.Schema({
-  user: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true
+const Post = sequelize.define('Post', {
+  id: {
+    type: DataTypes.INTEGER,
+    primaryKey: true,
+    autoIncrement: true
+  },
+  userId: {
+    type: DataTypes.INTEGER,
+    allowNull: false
   },
   type: {
-    type: String,
-    enum: ['photo', 'video', 'carousel'],
-    default: 'photo'
+    type: DataTypes.ENUM('photo', 'video', 'carousel'),
+    defaultValue: 'photo'
   },
-  media: [{
-    url: {
-      type: String,
-      required: true
-    },
-    type: {
-      type: String,
-      enum: ['image', 'video'],
-      required: true
-    },
-    thumbnail: String
-  }],
+  media: {
+    type: DataTypes.JSON,
+    defaultValue: []
+  },
   caption: {
-    type: String,
-    default: '',
-    maxlength: 2200
+    type: DataTypes.STRING(2200),
+    defaultValue: ''
   },
-  hashtags: [{
-    type: String,
-    trim: true
-  }],
-  mentions: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
-  }],
-  location: {
-    name: String,
-    coordinates: {
-      latitude: Number,
-      longitude: Number
-    }
+  hashtags: {
+    type: DataTypes.JSON,
+    defaultValue: []
   },
-  likes: [{
-    user: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User'
-    },
-    createdAt: {
-      type: Date,
-      default: Date.now
-    }
-  }],
-  comments: [{
-    user: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
-      required: true
-    },
-    text: {
-      type: String,
-      required: true,
-      maxlength: 500
-    },
-    likes: [{
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User'
-    }],
-    replies: [{
-      user: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User'
-      },
-      text: {
-        type: String,
-        required: true
-      },
-      likes: [{
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User'
-      }],
-      createdAt: {
-        type: Date,
-        default: Date.now
-      }
-    }],
-    isPinned: {
-      type: Boolean,
-      default: false
-    },
-    createdAt: {
-      type: Date,
-      default: Date.now
-    }
-  }],
+  locationName: {
+    type: DataTypes.STRING,
+    allowNull: true
+  },
+  locationLat: {
+    type: DataTypes.FLOAT,
+    allowNull: true
+  },
+  locationLng: {
+    type: DataTypes.FLOAT,
+    allowNull: true
+  },
   isArchived: {
-    type: Boolean,
-    default: false
+    type: DataTypes.BOOLEAN,
+    defaultValue: false
   },
   commentsDisabled: {
-    type: Boolean,
-    default: false
+    type: DataTypes.BOOLEAN,
+    defaultValue: false
   },
   hideLikeCount: {
-    type: Boolean,
-    default: false
+    type: DataTypes.BOOLEAN,
+    defaultValue: false
   },
   audience: {
-    type: String,
-    enum: ['public', 'followers', 'close_friends'],
-    default: 'public'
+    type: DataTypes.ENUM('public', 'followers', 'close_friends'),
+    defaultValue: 'public'
   },
-  shares: [{
-    user: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User'
-    },
-    createdAt: {
-      type: Date,
-      default: Date.now
-    }
-  }],
   views: {
-    type: Number,
-    default: 0
+    type: DataTypes.INTEGER,
+    defaultValue: 0
   }
 }, {
+  tableName: 'posts',
   timestamps: true
 });
 
-module.exports = mongoose.model('Post', postSchema);
+module.exports = Post;
